@@ -17,8 +17,8 @@ export async function POST(request: Request){
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ team: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-
-  }
+  } catch (err: unknown) {
+  const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+  return NextResponse.json({ error: message }, { status: 500 });
+}
 }
