@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClients';
+import { supabase } from '@/lib/supabaseClient';
 import { generateRoundRobin } from '@/app/tournament/lib/scheduler';
 
 export async function POST(req: Request) {

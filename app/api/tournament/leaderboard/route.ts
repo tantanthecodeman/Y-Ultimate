@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClients';
+import { supabase } from '@/lib/supabaseClient';
 
 interface TeamStats {
   team_id: string;
