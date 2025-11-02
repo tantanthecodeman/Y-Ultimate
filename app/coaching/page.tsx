@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { UserHeader } from "./auth/components/UserHeader";
 import { ChildrenList } from "./components/ChildrenList";
 import { SessionsList } from "./components/SessionsList";
 import { AttendanceList } from "./components/AttendanceList";
-import { ReportsDashboard } from "./components/ReportsDashboard";
 
 export default function CoachingDashboard() {
   const [tab, setTab] = useState("children");
@@ -13,41 +13,45 @@ export default function CoachingDashboard() {
     { key: "children", label: "Children" },
     { key: "sessions", label: "Sessions" },
     { key: "attendance", label: "Attendance" },
-    { key: "reports", label: "Reports" },
   ];
 
   return (
-    <div style={{ padding: "1.5rem" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
-        Coaching Programme Dashboard
-      </h1>
+    <div style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}>
+      {/* Header with user info and logout */}
+      <UserHeader />
 
-      {/* Tab buttons */}
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "6px",
-              border: "1px solid gray",
-              backgroundColor: tab === t.key ? "#2563eb" : "#f0f0f0",
-              color: tab === t.key ? "white" : "black",
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <div style={{ padding: "1.5rem" }}>
+        <h1 style={{ fontSize: "1.8rem", marginBottom: "1rem", color: "#111827" }}>
+          Coaching Programme Dashboard
+        </h1>
 
-      {/* Tab content */}
-      <div style={{ marginTop: "2rem" }}>
-        {tab === "children" && <ChildrenList />}
-        {tab === "sessions" && <SessionsList />}
-        {tab === "attendance" && <AttendanceList />}
-        {tab === "reports" && <ReportsDashboard />}
+        {/* Tab Buttons */}
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                backgroundColor: tab === t.key ? "#2563eb" : "white",
+                color: tab === t.key ? "white" : "black",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Views */}
+        <div style={{ background: "white", borderRadius: "8px", padding: "1rem", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+          {tab === "children" && <ChildrenList />}
+          {tab === "sessions" && <SessionsList />}
+          {tab === "attendance" && <AttendanceList />}
+        </div>
       </div>
     </div>
   );

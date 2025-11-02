@@ -24,62 +24,48 @@ export function SessionsList() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
 
-  // ✅ Fetch sessions with coach info
   async function fetchSessions(): Promise<void> {
     try {
       setLoading(true);
 
       const { data, error } = await supabase
         .from("sessions")
-        .select(`
-          id,
-          date,
-          community,
-          type,
-          duration,
-          coach_id,
-          coaches ( name, id )
-        `)
-        .order("date", { ascending: false });
+        .select(
+          `
+        id,
+        date,
+        community,
+        type,
+        duration,
+        coach_id,
+        coaches ( name, id )
+      `
+        )
+        .order("date", { ascending: false })
+        .returns<Session[]>(); // 👈 FIX: explicitly type the return data
 
-      if (error) {
-        console.error("Error fetching sessions:", error);
-        setSessions([]);
-      } else if (Array.isArray(data)) {
-        setSessions(data as unknown as Session[]);
-      } else {
-        setSessions([]);
-      }
+      if (error) throw error;
+
+      setSessions(data ?? []); // ✅ now fully type-safe
     } catch (err) {
-      console.error("Unexpected error:", err);
+      console.error("Error fetching sessions:", err);
       setSessions([]);
     } finally {
       setLoading(false);
     }
   }
 
-  // ✅ Delete a session (and optionally cascade attendance)
-  async function handleDeleteSession(id: string): Promise<void> {
-    const confirmDelete = confirm(
-      "Are you sure you want to delete this session? Attendance linked to it will also be removed."
-    );
-    if (!confirmDelete) return;
+  async function handleDelete(id: string): Promise<void> {
+    if (!window.confirm("Are you sure you want to delete this session?"))
+      return;
 
-    try {
-      // Optional: delete attendance manually if you haven’t set CASCADE in SQL
-      await supabase.from("attendance").delete().eq("session_id", id);
-
-      const { error } = await supabase.from("sessions").delete().eq("id", id);
-
-      if (error) {
-        alert("Error deleting session: " + error.message);
-        console.error(error);
-      } else {
-        alert("Session deleted successfully!");
-        fetchSessions(); // refresh list
-      }
-    } catch (err) {
-      console.error("Unexpected error deleting session:", err);
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting session:", error);
+      alert("❌ Failed to delete session. Check console for details.");
+    } else {
+      alert("✅ Session deleted successfully!");
+      fetchSessions();
     }
   }
 
@@ -134,7 +120,7 @@ export function SessionsList() {
             <th>Coach</th>
             <th>Type</th>
             <th>Duration (min)</th>
-            <th>Actions</th> {/* ✅ Added Actions column */}
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -149,15 +135,10 @@ export function SessionsList() {
               <td>{s.duration}</td>
               <td>
                 <button
-                  onClick={() => handleDeleteSession(s.id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "red",
-                    cursor: "pointer",
-                  }}
+                  onClick={() => handleDelete(s.id)}
+                  style={{ color: "red", cursor: "pointer" }}
                 >
-                  Delete
+                  🗑️ Delete
                 </button>
               </td>
             </tr>
