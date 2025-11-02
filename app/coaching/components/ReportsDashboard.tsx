@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Attendance } from "../lib/types";
+import AttendanceTrendChart from "./Reports/AttendanceTrendChart";
+import { generatePDFReport } from "../utils/pdfReport"; // ✅ Ensure this file exists
 
 interface Stats {
   totalChildren: number;
@@ -20,62 +22,55 @@ export function ReportsDashboard() {
   });
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch all report metrics
- async function fetchReports(): Promise<void> {
-  try {
-    setLoading(true);
+  // ✅ Fetch report metrics from Supabase
+  async function fetchReports(): Promise<void> {
+    try {
+      setLoading(true);
 
-    // 🧮 Count total children
-    const { count: rawChildCount, error: childErr } = await supabase
-      .from("children")
-      .select("*", { count: "exact", head: true });
-    if (childErr) throw childErr;
-    const childCount: number = rawChildCount ?? 0;
+      // Count children
+      const { count: rawChildCount, error: childErr } = await supabase
+        .from("children")
+        .select("*", { count: "exact", head: true });
+      if (childErr) throw childErr;
 
-    // 🧮 Count total sessions
-    const { count: rawSessionCount, error: sessErr } = await supabase
-      .from("sessions")
-      .select("*", { count: "exact", head: true });
-    if (sessErr) throw sessErr;
-    const sessionCount: number = rawSessionCount ?? 0;
+      // Count sessions
+      const { count: rawSessionCount, error: sessErr } = await supabase
+        .from("sessions")
+        .select("*", { count: "exact", head: true });
+      if (sessErr) throw sessErr;
 
-    // 🧮 Get attendance stats
-    const {
-      data: attendanceData,
-      count: rawAttCount,
-      error: attErr,
-    } = await supabase
-      .from("attendance")
-      .select("status", { count: "exact" })
-      .returns<Pick<Attendance, "status">[]>(); // explicitly typed
+      // Attendance stats
+      const {
+        data: attendanceData,
+        count: rawAttCount,
+        error: attErr,
+      } = await supabase
+        .from("attendance")
+        .select("status", { count: "exact" })
+        .returns<Pick<Attendance, "status">[]>(); // Explicit type safety
+      if (attErr) throw attErr;
 
-    if (attErr) throw attErr;
+      const childCount = rawChildCount ?? 0;
+      const sessionCount = rawSessionCount ?? 0;
+      const attCount = rawAttCount ?? 0;
+      const presentCount =
+        attendanceData?.filter((r) => r.status === "present").length ?? 0;
 
-    const attCount: number = rawAttCount ?? 0;
-    const dataArray: Pick<Attendance, "status">[] = attendanceData ?? [];
+      const attendanceRate =
+        attCount > 0 ? Math.round((presentCount / attCount) * 100) : 0;
 
-    // 📊 Compute attendance rate safely
-    const presentCount = dataArray.filter(
-      (r) => r.status === "present"
-    ).length;
-
-    const attendanceRate =
-      attCount > 0 ? Math.round((presentCount / attCount) * 100) : 0;
-
-    // ✅ Update state
-    setStats({
-      totalChildren: childCount,
-      totalSessions: sessionCount,
-      totalAttendanceRecords: attCount,
-      attendanceRate,
-    });
-  } catch (err) {
-    console.error("Error fetching report:", err);
-  } finally {
-    setLoading(false);
+      setStats({
+        totalChildren: childCount,
+        totalSessions: sessionCount,
+        totalAttendanceRecords: attCount,
+        attendanceRate,
+      });
+    } catch (err) {
+      console.error("Error fetching report:", err);
+    } finally {
+      setLoading(false);
+    }
   }
-}
-
 
   useEffect(() => {
     fetchReports();
@@ -85,8 +80,18 @@ export function ReportsDashboard() {
 
   return (
     <div style={{ marginTop: "1rem" }}>
-      <h2>Reports & Analytics</h2>
-      <div style={{ marginTop: "1rem", lineHeight: "1.8" }}>
+      <h2>📊 Reports & Analytics</h2>
+
+      {/* Summary Card */}
+      <div
+        style={{
+          marginTop: "1rem",
+          lineHeight: "1.8",
+          background: "#f9fafb",
+          padding: "1rem",
+          borderRadius: "12px",
+        }}
+      >
         <p>
           <b>Total Children:</b> {stats.totalChildren}
         </p>
@@ -100,9 +105,43 @@ export function ReportsDashboard() {
           <b>Overall Attendance Rate:</b> {stats.attendanceRate}%
         </p>
       </div>
-      <button onClick={fetchReports} style={{ marginTop: "1rem" }}>
-        Refresh Data
-      </button>
+
+      {/* Buttons */}
+      <div style={{ marginTop: "1rem" }}>
+        <button
+          onClick={fetchReports}
+          style={{
+            background: "#2563eb",
+            color: "white",
+            padding: "0.5rem 1rem",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Refresh Data
+        </button>
+
+        <button
+          onClick={() => generatePDFReport(stats)}
+          style={{
+            marginLeft: "0.5rem",
+            background: "#10b981",
+            color: "#fff",
+            border: "none",
+            padding: "0.5rem 1rem",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          Download PDF Report
+        </button>
+      </div>
+
+      {/* Attendance Chart */}
+      <div style={{ marginTop: "2rem" }}>
+        <AttendanceTrendChart />
+      </div>
     </div>
   );
 }

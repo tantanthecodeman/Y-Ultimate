@@ -24,3 +24,10 @@ export interface Attendance {
   child_id: string;
   status: "present" | "absent";
 }
+
+// ✅ Add this new interface
+export interface AttendanceRecord {
+  date: string;
+  presentCount: number;
+  absentCount: number;
+}
