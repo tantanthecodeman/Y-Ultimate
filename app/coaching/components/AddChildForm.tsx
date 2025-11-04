@@ -1,109 +1,64 @@
 "use client";
-
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import {supabase} from "@/lib/supabaseClient";
 
-export function AddChildForm({
-  onClose,
-  onAdded,
-}: {
-  onClose: () => void;
-  onAdded: () => void;
-}) {
-  const [form, setForm] = useState({
-    name: "",
-    age: "",
-    gender: "",
-    community: "",
-    school: "",
-  });
+export function AddChildForm({ onAdded, onClose }: { onAdded: () => void; onClose: () => void; }) {
+  const [name, setName] = useState("");
+  const [age, setAge] = useState<number | "">("");
+  const [gender, setGender] = useState("");
+  const [school, setSchool] = useState("");
+  const [community, setCommunity] = useState("");
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const { error } = await supabase.from("children").insert([
-      {
-        name: form.name,
-        age: Number(form.age),
-        gender: form.gender,
-        community: form.community,
-        school: form.school,
-      },
-    ]);
-
+    if (!name || !community) {
+      setError("Name and Community are required");
+      return;
+    }
+    const { error } = await supabase.from("children").insert({
+      name,
+      age: age === "" ? null : age,
+      gender,
+      school,
+      community,
+    });
     if (error) {
-      alert("Error adding child: " + error.message);
+      setError(error.message);
     } else {
-      alert("Child added successfully!");
+      setError("");
       onAdded();
       onClose();
     }
   }
 
   return (
-    <div
-      style={{
-        background: "#f9f9f9",
-        border: "1px solid #ccc",
-        padding: "1rem",
-        marginTop: "1rem",
-      }}
-    >
-      <h3>Add New Child</h3>
+    <form onSubmit={handleSubmit} style={{ border: "1px solid #ccc", padding: "1rem" }}>
+      <h3>Add Child</h3>
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
-        <br />
+      <label>Name*:</label><br />
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} required /><br />
 
-        <input
-          placeholder="Age"
-          type="number"
-          value={form.age}
-          onChange={(e) => setForm({ ...form, age: e.target.value })}
-          required
-        />
-        <br />
+      <label>Age:</label><br />
+      <input type="number" value={age} onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))} /><br />
 
-        <select
-          value={form.gender}
-          onChange={(e) => setForm({ ...form, gender: e.target.value })}
-          required
-        >
-          <option value="">Select gender</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
-        </select>
-        <br />
+      <label>Gender:</label><br />
+      <select value={gender} onChange={(e) => setGender(e.target.value)}>
+        <option value="">Select...</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select><br />
 
-        <input
-          placeholder="Community"
-          value={form.community}
-          onChange={(e) => setForm({ ...form, community: e.target.value })}
-          required
-        />
-        <br />
+      <label>School:</label><br />
+      <input type="text" value={school} onChange={(e) => setSchool(e.target.value)} /><br />
 
-        <input
-          placeholder="School"
-          value={form.school}
-          onChange={(e) => setForm({ ...form, school: e.target.value })}
-          required
-        />
-        <br />
+      <label>Community*:</label><br />
+      <input type="text" value={community} onChange={(e) => setCommunity(e.target.value)} required /><br />
 
-        <div style={{ marginTop: "1rem" }}>
-          <button type="submit">Save</button>
-          <button type="button" onClick={onClose} style={{ marginLeft: "0.5rem" }}>
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+      <button type="submit" style={{ marginTop: "1rem" }}>Add Child</button>
+      <button type="button" onClick={onClose} style={{ marginLeft: "1rem" }}>Cancel</button>
+    </form>
   );
 }
