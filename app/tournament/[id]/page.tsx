@@ -542,7 +542,7 @@ export default function TournamentDashboard() {
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: 20
-          }}>RetryTGContinuetypescript            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#111827' }}>
+          }}>           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#111827' }}>
               Registered Teams
             </h2>
             <Link href={`/tournament/${tournamentId}/teams`}>
