@@ -45,50 +45,51 @@ export default function PlayersManagementPage() {
     }
   }
 
-  async function handleCreateProfile(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    setError(null);
-    setSuccessMessage(null);
+ async function handleCreateProfile(e: React.FormEvent) {
+  e.preventDefault();
+  setCreating(true);
+  setError(null);
+  setSuccessMessage(null);
 
-    try {
-      // Get current session and access token from Supabase client
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || sessionData?.session?.access_token || null;
+  try {
+    // Get current session and access token from Supabase client
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
 
-      if (!token) {
-        setError('You must be logged in to create a profile.');
-        setCreating(false);
-        return;
-      }
-
-      const res = await fetch('/api/profile/create', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` // <-- include token in header
-        },
-        body: JSON.stringify({ full_name: fullName, role })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to create profile');
-      }
-
-      setSuccessMessage(`Profile created for ${data.profile.full_name}!`);
-      setFullName('');
-      setRole('player');
-      setShowCreateForm(false);
-      loadProfiles();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(message);
-    } finally {
+    if (!token) {
+      setError("You must be logged in to create a profile. Please sign in first.");
       setCreating(false);
+      return;
     }
+
+    const res = await fetch("/api/profile/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ fullname: fullName, role }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Failed to create profile");
+    }
+
+    setSuccessMessage(`Profile created for ${data.profile.fullname}!`);
+    setFullName("");
+    setRole("player");
+    setShowCreateForm(false);
+    loadProfiles();
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "An unexpected error occurred";
+    setError(message);
+  } finally {
+    setCreating(false);
   }
+}
+
 
   async function handleDeleteProfile(id: string) {
     try {

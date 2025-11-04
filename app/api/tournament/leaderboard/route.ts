@@ -1,81 +1,78 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { NextResponse } from "next/server";
+import {supabase} from "@/lib/supabaseClient";
 
 interface TeamStats {
-  team_id: string;
+  teamid: string;
   played: number;
   wins: number;
   losses: number;
   draws: number;
   points: number;
-  avg_spirit?: number | null;
+  avgspirit?: number | null;
 }
 
-interface SpiritData {
-  team_id: string;
-  avg_spirit: number;
-}
-
-/**
- * Returns a simple standings list for a tournament:
- * { team_id, played, wins, losses, draws, points, avg_spirit }
- */
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const tournament_id = url.searchParams.get('tournament_id');
-    
-    if (!tournament_id) {
-      return NextResponse.json({ error: 'Missing tournament_id' }, { status: 400 });
+    const tournamentid = url.searchParams.get("tournamentid");
+
+    if (!tournamentid) {
+      return NextResponse.json({ error: "Missing tournamentid" }, { status: 400 });
     }
-    
-    // Fetch matches
+
+    // Fetch ALL matches (not just completed status, but must have scores)
     const { data: matches, error: matchesErr } = await supabase
-      .from('matches')
-      .select('id,home_team_id,away_team_id,home_score,away_score,tournament_id')
-      .eq('tournament_id', tournament_id);
-    
+      .from("matches")
+      .select("id, home_team_id, away_team_id, home_score, away_score, tournament_id")
+      .eq("tournament_id", tournamentid)
+      .not("home_score", "is", null)
+      .not("away_score", "is", null);
+
     if (matchesErr) {
       return NextResponse.json({ error: matchesErr.message }, { status: 500 });
     }
-    
-    // Fetch spirit averages per team
-    let spirits = null;
-    try {
-      const { data } = await supabase
-      .rpc('team_spirit_average', { t_id: tournament_id });
-      spirits = data;
-    } catch {
-      spirits = null;
+
+    if (!matches || matches.length === 0) {
+      return NextResponse.json({ standings: [] });
     }
-    
-    // Build simple map of team stats
+
+    // Fetch spirit scores
+    const { data: spiritScores } = await supabase
+      .from("spirit_scores")
+      .select("teamid, score")
+      .in("matchid", matches.map(m => m.id));
+
+    // Calculate spirit averages per team
+    const spiritMap: Record<string, { total: number; count: number }> = {};
+    (spiritScores || []).forEach((s: { teamid: string; score: number }) => {
+      if (!spiritMap[s.teamid]) spiritMap[s.teamid] = { total: 0, count: 0 };
+      spiritMap[s.teamid].total += s.score;
+      spiritMap[s.teamid].count += 1;
+    });
+
+    // Build team stats
     const stats: Record<string, TeamStats> = {};
-    
-    for (const m of matches || []) {
+
+    for (const m of matches) {
       const home = m.home_team_id;
       const away = m.away_team_id;
-      
-      if (!stats[home]) {
-        stats[home] = { team_id: home, played: 0, wins: 0, losses: 0, draws: 0, points: 0 };
-      }
-      if (!stats[away]) {
-        stats[away] = { team_id: away, played: 0, wins: 0, losses: 0, draws: 0, points: 0 };
-      }
-      
-      // skip BYE matches (null team)
+
       if (!home || !away) continue;
-      
+
+      if (!stats[home]) stats[home] = { teamid: home, played: 0, wins: 0, losses: 0, draws: 0, points: 0 };
+      if (!stats[away]) stats[away] = { teamid: away, played: 0, wins: 0, losses: 0, draws: 0, points: 0 };
+
       stats[home].played += 1;
       stats[away].played += 1;
-      
-      if (m.home_score == null || m.away_score == null) continue; // not finished
-      
-      if (m.home_score > m.away_score) {
+
+      const homeScore = m.home_score ?? 0;
+      const awayScore = m.away_score ?? 0;
+
+      if (homeScore > awayScore) {
         stats[home].wins += 1;
         stats[home].points += 3;
         stats[away].losses += 1;
-      } else if (m.home_score < m.away_score) {
+      } else if (homeScore < awayScore) {
         stats[away].wins += 1;
         stats[away].points += 3;
         stats[home].losses += 1;
@@ -86,27 +83,26 @@ export async function GET(req: Request) {
         stats[away].points += 1;
       }
     }
-    
-    // Convert map to array and attach spirit if available
+
+    // Attach spirit averages
     const arr = Object.values(stats);
-    
-    // attach spirit average if RPC provided data
-    if (spirits && Array.isArray(spirits)) {
-      const spiritMap: Record<string, number> = {};
-      (spirits as SpiritData[]).forEach((s) => {
-        spiritMap[s.team_id] = s.avg_spirit;
-      });
-      arr.forEach((a) => {
-        a.avg_spirit = spiritMap[a.team_id] ?? null;
-      });
-    }
-    
-    // sort by points desc, then goal diff (not computed), then spirit
-    arr.sort((a, b) => (b.points - a.points) || ((b.avg_spirit || 0) - (a.avg_spirit || 0)));
-    
+    arr.forEach((team) => {
+      if (spiritMap[team.teamid]) {
+        team.avgspirit = spiritMap[team.teamid].total / spiritMap[team.teamid].count;
+      } else {
+        team.avgspirit = null;
+      }
+    });
+
+    // Sort by points desc, then spirit desc
+    arr.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      return (b.avgspirit || 0) - (a.avgspirit || 0);
+    });
+
     return NextResponse.json({ standings: arr });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+    const message = err instanceof Error ? err.message : "An unexpected error occurred";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

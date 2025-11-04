@@ -1,7 +1,6 @@
-'use client';
-
-import { useState } from 'react';
-import { Match } from '../lib/types';
+"use client";
+import { useState } from "react";
+import { Match } from "../lib/types";
 
 interface MatchScoreUpdateFormProps {
   match: Match;
@@ -9,13 +8,14 @@ interface MatchScoreUpdateFormProps {
   onCancel?: () => void;
 }
 
-export default function MatchScoreUpdateForm({ 
-  match, 
+export default function MatchScoreUpdateForm({
+  match,
   onSuccess,
-  onCancel 
+  onCancel,
 }: MatchScoreUpdateFormProps) {
-  const [homeScore, setHomeScore] = useState(match.home_score.toString());
-  const [awayScore, setAwayScore] = useState(match.away_score.toString());
+  const [homeScore, setHomeScore] = useState<number>(match.home_score ?? 0);
+  const [awayScore, setAwayScore] = useState<number>(match.away_score ?? 0);
+  const [status, setStatus] = useState<string>(match.status || "scheduled");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,42 +24,27 @@ export default function MatchScoreUpdateForm({
     setLoading(true);
     setError(null);
 
-    const homeScoreNum = parseInt(homeScore);
-    const awayScoreNum = parseInt(awayScore);
-
-    if (isNaN(homeScoreNum) || isNaN(awayScoreNum)) {
-      setError('Scores must be valid numbers');
-      setLoading(false);
-      return;
-    }
-
-    if (homeScoreNum < 0 || awayScoreNum < 0) {
-      setError('Scores cannot be negative');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch('/api/tournament/match/update-score', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/tournament/match/update-scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          match_id: match.id,
-          home_score: homeScoreNum,
-          away_score: awayScoreNum,
-          status: 'completed'
-        })
+          matchid: match.id,
+          homescore: homeScore,
+          awayscore: awayScore,
+          status,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || 'Failed to update score');
+        throw new Error(data?.error || "Failed to update score");
       }
 
       if (onSuccess) onSuccess();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const message = err instanceof Error ? err.message : "An unexpected error occurred";
       setError(message);
     } finally {
       setLoading(false);
@@ -67,139 +52,106 @@ export default function MatchScoreUpdateForm({
   }
 
   return (
-    <div style={{
-      border: '1px solid #e5e7eb',
-      borderRadius: 12,
-      padding: 24,
-      backgroundColor: '#fff',
-      maxWidth: 500
-    }}>
-      <h3 style={{ 
-        margin: '0 0 16px 0',
-        fontSize: 18,
-        fontWeight: 700,
-        color: '#111827'
-      }}>
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 12,
+        padding: 24,
+        backgroundColor: "#fff",
+      }}
+    >
+      <h3 style={{ margin: "0 0 16px 0", fontSize: 18, fontWeight: 700 }}>
         Update Match Score
       </h3>
 
-      <form onSubmit={handleSubmit}>
-        {/* Home Team Score */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'block',
-            marginBottom: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            {match.home_team?.name || 'Home Team'} Score *
-          </label>
-          <input
-            type="number"
-            min="0"
-            value={homeScore}
-            onChange={(e) => setHomeScore(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: 6,
-              fontSize: 16,
-              fontWeight: 600,
-              backgroundColor: loading ? '#f9fafb' : '#fff'
-            }}
-          />
+      {error && (
+        <div style={{ padding: 12, backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: 6, marginBottom: 16, color: "#991b1b" }}>
+          {error}
         </div>
+      )}
 
-        {/* Away Team Score */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'block',
-            marginBottom: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            {match.away_team?.name || 'Away Team'} Score *
-          </label>
-          <input
-            type="number"
-            min="0"
-            value={awayScore}
-            onChange={(e) => setAwayScore(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: 6,
-              fontSize: 16,
-              fontWeight: 600,
-              backgroundColor: loading ? '#f9fafb' : '#fff'
-            }}
-          />
-        </div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
+          {match.home_team?.name || "Home Team"} Score
+        </label>
+        <input
+          type="number"
+          value={homeScore}
+          onChange={(e) => setHomeScore(Number(e.target.value))}
+          min={0}
+          required
+          disabled={loading}
+          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
+        />
+      </div>
 
-        {error && (
-          <div style={{
-            padding: 12,
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fecaca',
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
+          {match.away_team?.name || "Away Team"} Score
+        </label>
+        <input
+          type="number"
+          value={awayScore}
+          onChange={(e) => setAwayScore(Number(e.target.value))}
+          min={0}
+          required
+          disabled={loading}
+          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
+        />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>Status</label>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          disabled={loading}
+          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
+        >
+          <option value="scheduled">Scheduled</option>
+          <option value="live">Live</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            flex: 1,
+            padding: 10,
+            backgroundColor: loading ? "#9ca3af" : "#10b981",
+            color: "#fff",
+            border: "none",
             borderRadius: 6,
-            marginBottom: 16,
-            fontSize: 14,
-            color: '#991b1b'
-          }}>
-            ❌ {error}
-          </div>
-        )}
-
-        <div style={{ 
-          display: 'flex', 
-          gap: 12,
-          justifyContent: 'flex-end'
-        }}>
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: 'none',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}
-            >
-              Cancel
-            </button>
-          )}
+            cursor: loading ? "not-allowed" : "pointer",
+            fontWeight: 600,
+          }}
+        >
+          {loading ? "Updating..." : "Update Score"}
+        </button>
+        {onCancel && (
           <button
-            type="submit"
+            type="button"
+            onClick={onCancel}
             disabled={loading}
             style={{
-              padding: '10px 20px',
-              backgroundColor: loading ? '#9ca3af' : '#10b981',
-              color: '#fff',
-              border: 'none',
+              flex: 1,
+              padding: 10,
+              backgroundColor: "#f3f4f6",
+              color: "#374151",
+              border: "1px solid #d1d5db",
               borderRadius: 6,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: 14,
-              fontWeight: 600
+              cursor: "pointer",
+              fontWeight: 600,
             }}
           >
-            {loading ? 'Updating...' : 'Update Score'}
+            Cancel
           </button>
-        </div>
-      </form>
-    </div>
+        )}
+      </div>
+    </form>
   );
 }

@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         match_id, 
         team_id, 
         scorer_profile_id, 
-        score: Math.round(average * 100) / 100, 
+        score: Math.round(average), 
         notes, 
         scores 
       }])

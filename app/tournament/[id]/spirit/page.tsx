@@ -1,22 +1,41 @@
-'use client';
+"use client";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import SpiritScoreForm from "../../components/SpiritScoreForm";
+import {supabase} from "@/lib/supabaseClient";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Match, Team } from '../../lib/types';
-import SpiritScoreForm from '../../components/SpiritScoreForm';
+interface Team {
+  id: string;
+  name: string;
+}
+
+interface Match {
+  id: string;
+  tournament_id: string;
+  home_team_id: string;
+  away_team_id: string;
+  home_score?: number;
+  away_score?: number;
+  status: string;
+}
+
+interface MatchWithTeams extends Match {
+  home_team: Team | null;
+  away_team: Team | null;
+}
 
 export default function SpiritScorePage() {
   const params = useParams();
   const tournamentId = params.id as string;
-  
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [matches, setMatches] = useState<MatchWithTeams[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedMatch, setSelectedMatch] = useState<string>('');
-  const [selectedTeam, setSelectedTeam] = useState<string>('');
-  const [scorerProfileId] = useState('temp-profile-id'); // TODO: Get from auth
+  const [selectedMatch, setSelectedMatch] = useState<string>("");
+  const [selectedTeam, setSelectedTeam] = useState<string>("");
+  const [scorerProfileId, setScorerProfileId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     loadData();
@@ -25,21 +44,51 @@ export default function SpiritScorePage() {
   async function loadData() {
     try {
       setLoading(true);
+      setError("");
+
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setScorerProfileId(user.id);
+      }
+
+      // Load all teams first
+      const { data: teamsData, error: teamsError } = await supabase
+        .from("teams")
+        .select("id, name")
+        .eq("tournament_id", tournamentId);
+
+      if (teamsError) {
+        console.error("Teams fetch error:", teamsError);
+        setTeams([]);
+      } else {
+        setTeams(teamsData || []);
+      }
 
       // Load completed matches
-      const matchRes = await fetch(`/api/tournament/matches?tournament_id=${tournamentId}`);
-      const matchData = await matchRes.json();
-      const completedMatches = (matchData.matches || []).filter(
-        (m: Match) => m.status === 'completed'
-      );
-      setMatches(completedMatches);
+      const { data: matchesData, error: matchError } = await supabase
+        .from("matches")
+        .select("id, tournament_id, home_team_id, away_team_id, home_score, away_score, status")
+        .eq("tournament_id", tournamentId)
+        .eq("status", "completed");
 
-      // Load teams
-      const teamsRes = await fetch(`/api/tournament/teams?tournament_id=${tournamentId}`);
-      const teamsData = await teamsRes.json();
-      setTeams(teamsData.teams || []);
+      if (matchError) {
+        console.error("Match fetch error:", matchError);
+        setError("Failed to load matches");
+        setMatches([]);
+      } else {
+        // Manually join team data
+        const teamsMap = new Map(teamsData?.map(t => [t.id, t]) || []);
+        const matchesWithTeams: MatchWithTeams[] = (matchesData || []).map(match => ({
+          ...match,
+          home_team: teamsMap.get(match.home_team_id) || null,
+          away_team: teamsMap.get(match.away_team_id) || null,
+        }));
+        setMatches(matchesWithTeams);
+      }
     } catch (err: unknown) {
-      console.error('Failed to load data');
+      console.error("Failed to load data", err);
+      setError("Failed to load data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -47,168 +96,125 @@ export default function SpiritScorePage() {
 
   function handleSubmitSuccess() {
     setSubmitted(true);
-    setSelectedMatch('');
-    setSelectedTeam('');
-    
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 3000);
+    setSelectedMatch("");
+    setSelectedTeam("");
+    setTimeout(() => setSubmitted(false), 3000);
   }
 
-  const selectedMatchData = matches.find(m => m.id === selectedMatch);
-  const selectedTeamData = teams.find(t => t.id === selectedTeam);
+  const selectedMatchData = matches.find((m) => m.id === selectedMatch);
+  const selectedTeamData = teams.find((t) => t.id === selectedTeam);
 
   if (loading) {
     return (
-      <div style={{ padding: 24, textAlign: 'center' }}>
-        Loading...
+      <div style={{ padding: 24, textAlign: "center" }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!scorerProfileId) {
+    return (
+      <div style={{ padding: 24, textAlign: "center" }}>
+        <p style={{ color: "#ef4444", marginBottom: 16 }}>
+          You must be logged in to submit spirit scores.
+        </p>
+        <Link href="/tournament/auth/login" style={{ color: "#3b82f6", textDecoration: "underline" }}>
+          Sign In
+        </Link>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <Link 
-          href={`/tournament/${tournamentId}`}
+    <div style={{ padding: 24, maxWidth: 800, margin: "0 auto" }}>
+      <Link
+        href={`/tournament/${tournamentId}`}
+        style={{ display: "inline-block", marginBottom: 16, color: "#3b82f6", fontSize: 14 }}
+      >
+        ← Back to Tournament
+      </Link>
+
+      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 24 }}>Submit Spirit Score</h1>
+
+      {error && (
+        <div
           style={{
-            display: 'inline-block',
-            marginBottom: 16,
-            color: '#3b82f6',
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600
+            padding: 16,
+            backgroundColor: "#fee2e2",
+            border: "1px solid #fecaca",
+            borderRadius: 8,
+            marginBottom: 24,
+            color: "#991b1b",
           }}
         >
-          ← Back to Tournament
-        </Link>
-        
-        <h1 style={{ 
-          fontSize: 32, 
-          fontWeight: 700,
-          margin: '0 0 8px 0',
-          color: '#111827'
-        }}>
-          Submit Spirit Score
-        </h1>
-        <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
-          Rate your opponent&apos;s Spirit of the Game
-        </p>
-      </div>
-
-      {/* Success Message */}
-      {submitted && (
-        <div style={{
-          padding: 16,
-          backgroundColor: '#d1fae5',
-          border: '1px solid #6ee7b7',
-          borderRadius: 8,
-          marginBottom: 24,
-          color: '#065f46',
-          fontSize: 14
-        }}>
-          ✅ Spirit score submitted successfully!
+          {error}
         </div>
       )}
 
-      {/* Match Selection */}
-      <div style={{
-        padding: 24,
-        backgroundColor: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 12,
-        marginBottom: 24
-      }}>
-        <h2 style={{
-          margin: '0 0 16px 0',
-          fontSize: 18,
-          fontWeight: 700,
-          color: '#111827'
-        }}>
-          Select Match
-        </h2>
-
-        {matches.length === 0 ? (
-          <div style={{
-            padding: 40,
-            textAlign: 'center',
-            border: '2px dashed #d1d5db',
+      {submitted && (
+        <div
+          style={{
+            padding: 16,
+            backgroundColor: "#d1fae5",
+            border: "1px solid #6ee7b7",
             borderRadius: 8,
-            color: '#9ca3af'
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
-            <p style={{ fontSize: 14, margin: 0 }}>
-              No completed matches yet. Spirit scores can only be submitted after matches are completed.
-            </p>
-          </div>
-        ) : (
-          <>
-            <select
-              value={selectedMatch}
-              onChange={(e) => {
-                setSelectedMatch(e.target.value);
-                setSelectedTeam('');
-              }}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: 6,
-                fontSize: 14,
-                marginBottom: 16
-              }}
-            >
-              <option value="">Select a completed match...</option>
-              {matches.map((match) => (
-                <option key={match.id} value={match.id}>
-                  {match.home_team?.name || 'TBD'} vs {match.away_team?.name || 'TBD'} 
-                  ({match.home_score}-{match.away_score})
-                </option>
-              ))}
-            </select>
+            marginBottom: 24,
+            color: "#065f46",
+          }}
+        >
+          Spirit score submitted successfully!
+        </div>
+      )}
 
-            {/* Team Selection */}
-            {selectedMatchData && (
-              <>
-                <h3 style={{
-                  margin: '0 0 12px 0',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Rate Team
-                </h3>
-                <select
-                  value={selectedTeam}
-                  onChange={(e) => setSelectedTeam(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 6,
-                    fontSize: 14
-                  }}
-                >
-                  <option value="">Select team to rate...</option>
-                  {selectedMatchData.home_team && (
-                    <option value={selectedMatchData.home_team_id || ''}>
-                      {selectedMatchData.home_team.name}
-                    </option>
-                  )}
-                  {selectedMatchData.away_team && (
-                    <option value={selectedMatchData.away_team_id || ''}>
-                      {selectedMatchData.away_team.name}
-                    </option>
-                  )}
-                </select>
-              </>
-            )}
-          </>
-        )}
+      <div style={{ marginBottom: 24 }}>
+        <label style={{ display: "block", marginBottom: 8, fontWeight: 600 }}>
+          Select Match
+        </label>
+        <select
+          value={selectedMatch}
+          onChange={(e) => setSelectedMatch(e.target.value)}
+          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
+        >
+          <option value="">-- Select a Match --</option>
+          {matches.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.home_team?.name || "Unknown"} vs {m.away_team?.name || "Unknown"}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Spirit Score Form */}
+      {matches.length === 0 && !loading && (
+        <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: 24 }}>
+          No completed matches found. Complete a match first to submit spirit scores.
+        </p>
+      )}
+
+      {selectedMatch && selectedMatchData && (
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: "block", marginBottom: 8, fontWeight: 600 }}>
+            Select Team to Score
+          </label>
+          <select
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.target.value)}
+            style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
+          >
+            <option value="">-- Select a Team --</option>
+            {selectedMatchData.home_team && (
+              <option value={selectedMatchData.home_team_id}>
+                {selectedMatchData.home_team.name}
+              </option>
+            )}
+            {selectedMatchData.away_team && (
+              <option value={selectedMatchData.away_team_id}>
+                {selectedMatchData.away_team.name}
+              </option>
+            )}
+          </select>
+        </div>
+      )}
+
       {selectedMatch && selectedTeam && (
         <SpiritScoreForm
           matchId={selectedMatch}
