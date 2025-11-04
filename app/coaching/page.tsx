@@ -5,14 +5,18 @@ import { UserHeader } from "./auth/components/UserHeader";
 import { ChildrenList } from "./components/ChildrenList";
 import { SessionsList } from "./components/SessionsList";
 import { AttendanceList } from "./components/AttendanceList";
+import { ReportsDashboard } from "./components/ReportsDashboard";
+
+type TabKey = "children" | "sessions" | "attendance" | "reports";
 
 export default function CoachingDashboard() {
-  const [tab, setTab] = useState("children");
+  const [tab, setTab] = useState<TabKey>("children");
 
-  const tabs = [
-    { key: "children", label: "Children" },
-    { key: "sessions", label: "Sessions" },
-    { key: "attendance", label: "Attendance" },
+  const tabs: { key: TabKey; label: string; icon: string }[] = [
+    { key: "children", label: "Children", icon: "👶" },
+    { key: "sessions", label: "Sessions", icon: "📅" },
+    { key: "attendance", label: "Attendance", icon: "✓" },
+    { key: "reports", label: "Reports", icon: "📊" },
   ];
 
   return (
@@ -26,7 +30,7 @@ export default function CoachingDashboard() {
         </h1>
 
         {/* Tab Buttons */}
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: 'wrap' }}>
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -39,18 +43,31 @@ export default function CoachingDashboard() {
                 color: tab === t.key ? "white" : "black",
                 cursor: "pointer",
                 transition: "all 0.2s",
+                fontWeight: tab === t.key ? 600 : 400,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
               }}
             >
-              {t.label}
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
             </button>
           ))}
         </div>
 
         {/* Tab Views */}
-        <div style={{ background: "white", borderRadius: "8px", padding: "1rem", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+        <div
+          style={{
+            background: "white",
+            borderRadius: "8px",
+            padding: "1rem",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+          }}
+        >
           {tab === "children" && <ChildrenList />}
           {tab === "sessions" && <SessionsList />}
           {tab === "attendance" && <AttendanceList />}
+          {tab === "reports" && <ReportsDashboard />}
         </div>
       </div>
     </div>

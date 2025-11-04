@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Attendance } from "../lib/types";
 import AttendanceTrendChart from "./Reports/AttendanceTrendChart";
-import { generatePDFReport } from "../utils/pdfReport"; // ✅ Ensure this file exists
 
 interface Stats {
   totalChildren: number;
@@ -21,52 +20,53 @@ export function ReportsDashboard() {
     attendanceRate: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // ✅ Fetch report metrics from Supabase
   async function fetchReports(): Promise<void> {
     try {
       setLoading(true);
+      setError(null);
 
       // Count children
-      const { count: rawChildCount, error: childErr } = await supabase
+      const { count: childCount, error: childErr } = await supabase
         .from("children")
         .select("*", { count: "exact", head: true });
+      
       if (childErr) throw childErr;
 
       // Count sessions
-      const { count: rawSessionCount, error: sessErr } = await supabase
+      const { count: sessionCount, error: sessErr } = await supabase
         .from("sessions")
         .select("*", { count: "exact", head: true });
+      
       if (sessErr) throw sessErr;
 
       // Attendance stats
       const {
         data: attendanceData,
-        count: rawAttCount,
+        count: attCount,
         error: attErr,
       } = await supabase
         .from("attendance")
-        .select("status", { count: "exact" })
-        .returns<Pick<Attendance, "status">[]>(); // Explicit type safety
+        .select("status", { count: "exact" });
+      
       if (attErr) throw attErr;
 
-      const childCount = rawChildCount ?? 0;
-      const sessionCount = rawSessionCount ?? 0;
-      const attCount = rawAttCount ?? 0;
       const presentCount =
         attendanceData?.filter((r) => r.status === "present").length ?? 0;
 
-      const attendanceRate =
-        attCount > 0 ? Math.round((presentCount / attCount) * 100) : 0;
+      const totalAtt = attCount ?? 0;
+      const attendanceRate = totalAtt > 0 ? Math.round((presentCount / totalAtt) * 100) : 0;
 
       setStats({
-        totalChildren: childCount,
-        totalSessions: sessionCount,
-        totalAttendanceRecords: attCount,
+        totalChildren: childCount ?? 0,
+        totalSessions: sessionCount ?? 0,
+        totalAttendanceRecords: totalAtt,
         attendanceRate,
       });
     } catch (err) {
       console.error("Error fetching report:", err);
+      setError(err instanceof Error ? err.message : "Failed to load reports");
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,48 @@ export function ReportsDashboard() {
     fetchReports();
   }, []);
 
-  if (loading) return <p>Loading report...</p>;
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 300
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+          <p style={{ color: '#6b7280' }}>Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        padding: 20,
+        backgroundColor: '#fee2e2',
+        border: '1px solid #fecaca',
+        borderRadius: 8,
+        color: '#991b1b'
+      }}>
+        ❌ {error}
+        <button
+          onClick={fetchReports}
+          style={{
+            marginLeft: 16,
+            padding: '4px 12px',
+            backgroundColor: '#fff',
+            border: '1px solid #fecaca',
+            borderRadius: 4,
+            cursor: 'pointer'
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ marginTop: "1rem" }}>
@@ -90,24 +131,54 @@ export function ReportsDashboard() {
           background: "#f9fafb",
           padding: "1rem",
           borderRadius: "12px",
+          border: '1px solid #e5e7eb'
         }}
       >
-        <p>
-          <b>Total Children:</b> {stats.totalChildren}
-        </p>
-        <p>
-          <b>Total Sessions Conducted:</b> {stats.totalSessions}
-        </p>
-        <p>
-          <b>Total Attendance Records:</b> {stats.totalAttendanceRecords}
-        </p>
-        <p>
-          <b>Overall Attendance Rate:</b> {stats.attendanceRate}%
-        </p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 16
+        }}>
+          <div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
+              Total Children
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#111827' }}>
+              {stats.totalChildren}
+            </div>
+          </div>
+          
+          <div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
+              Total Sessions
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#111827' }}>
+              {stats.totalSessions}
+            </div>
+          </div>
+          
+          <div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
+              Attendance Records
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#111827' }}>
+              {stats.totalAttendanceRecords}
+            </div>
+          </div>
+          
+          <div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
+              Attendance Rate
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: stats.attendanceRate >= 75 ? '#10b981' : '#ef4444' }}>
+              {stats.attendanceRate}%
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Buttons */}
-      <div style={{ marginTop: "1rem" }}>
+      <div style={{ marginTop: "1rem", display: 'flex', gap: 12 }}>
         <button
           onClick={fetchReports}
           style={{
@@ -117,24 +188,10 @@ export function ReportsDashboard() {
             borderRadius: "8px",
             border: "none",
             cursor: "pointer",
+            fontWeight: 600
           }}
         >
-          Refresh Data
-        </button>
-
-        <button
-          onClick={() => generatePDFReport(stats)}
-          style={{
-            marginLeft: "0.5rem",
-            background: "#10b981",
-            color: "#fff",
-            border: "none",
-            padding: "0.5rem 1rem",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          Download PDF Report
+          🔄 Refresh Data
         </button>
       </div>
 
