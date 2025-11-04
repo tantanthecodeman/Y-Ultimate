@@ -1,45 +1,67 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import {supabase} from '@/lib/supabaseClient';
+
+export async function GET() {
+  // Health check
+  return NextResponse.json({ ok: true, hint: 'Use POST with application/json to create profile' });
+}
 
 export async function POST(req: Request) {
   try {
-    const tokenHeader = req.headers.get('authorization') || '';
-    const token = tokenHeader.replace('Bearer ', '').trim();
-
-    if (!token) {
-      return NextResponse.json({ error: 'Missing access token' }, { status: 401 });
+    // 1) Strict JSON check
+    const ct = req.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 415 });
     }
 
-    // Validate and get user from token
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-    if (userErr || !userData?.user) {
-      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    // 2) Parse body
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { full_name, role } = await req.json();
-    if (!full_name) {
-      return NextResponse.json({ error: 'Missing full_name' }, { status: 400 });
+    // 3) Extract fields
+    const {
+      fullname,
+      role = 'player',
+      team_id = null,
+      jersey_number = null,
+      position = null,
+      dob = null,
+      contact_email = null,
+      contact_phone = null,
+      notes = null,
+    } = body as Record<string, unknown>;
+
+    if (typeof fullname !== 'string' || !fullname.trim()) {
+      return NextResponse.json({ error: 'fullname is required' }, { status: 400 });
     }
 
-    const validRoles = ['player', 'coach', 'td', 'volunteer', 'guardian'];
-    const profileRole = role && validRoles.includes(role) ? role : 'player';
-
-    // Use the authenticated user's id (not a random UUID)
-    const profileId = userData.user.id;
-
+    // 4) Insert
     const { data, error } = await supabase
       .from('profiles')
-      .insert([{ id: profileId, full_name, role: profileRole }])
-      .select()
+      .insert([{
+        fullname,
+        role,
+        team_id,
+        jersey_number,
+        position,
+        dob,
+        contact_email,
+        contact_phone,
+        notes,
+      }])
+      .select('*')
       .single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ profile: data });
+    // 5) Respond JSON
+    return NextResponse.json({ profile: data }, { status: 201 });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+    const message = err instanceof Error ? err.message : 'Unexpected error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

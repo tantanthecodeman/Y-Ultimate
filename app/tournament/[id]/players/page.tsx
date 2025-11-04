@@ -1,399 +1,274 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Profile } from '../../lib/types';
-import PlayerProfileCard from '../../components/PlayerProfileCard';
-import { supabase } from '@/lib/supabaseClient'; 
+import { useEffect, useMemo, useState } from 'react';
 
-export default function PlayersManagementPage() {
-  const params = useParams();
-  const tournamentId = params.id as string;
-  
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('player');
-  
-  // Form state
-  const [fullName, setFullName] = useState('');
+type Team = { id: string; name: string };
+
+function Field({
+  label, children, hint
+}: { label: string; children: React.ReactNode; hint?: string }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>{label}</label>
+      {children}
+      {hint && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{hint}</div>}
+    </div>
+  );
+}
+
+export default function NewPlayerPage() {
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(true);
+
+  // Form fields
+  const [fullname, setFullname] = useState('');
   const [role, setRole] = useState('player');
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [teamId, setTeamId] = useState('');
+  const [jersey, setJersey] = useState<string>('');
+  const [position, setPosition] = useState('');
+  const [dob, setDob] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
+  const [agree, setAgree] = useState(false);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProfiles();
-  }, [search, roleFilter]);
-
-  async function loadProfiles() {
-    try {
-      setLoading(true);
-      const url = `/api/profile/list?role=${roleFilter}${search ? `&search=${search}` : ''}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      
-      if (res.ok) {
-        setProfiles(data.profiles || []);
+    // Load teams for dropdown (anonymous)
+    async function loadTeams() {
+      try {
+        setLoadingTeams(true);
+        const res = await fetch('/api/tournament/teams'); // Adjust if you need tournament filter
+        const json = await res.json();
+        setTeams(json.teams || []);
+      } catch {
+        setTeams([]);
+      } finally {
+        setLoadingTeams(false);
       }
-    } catch (err: unknown) {
-      console.error('Failed to load profiles');
-    } finally {
-      setLoading(false);
     }
-  }
+    loadTeams();
+  }, []);
 
- async function handleCreateProfile(e: React.FormEvent) {
-  e.preventDefault();
-  setCreating(true);
-  setError(null);
-  setSuccessMessage(null);
+  const jerseyNum = useMemo(() => {
+    const n = Number(jersey);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  }, [jersey]);
 
-  try {
-    // Get current session and access token from Supabase client
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
 
-    if (!token) {
-      setError("You must be logged in to create a profile. Please sign in first.");
-      setCreating(false);
+    if (!agree) {
+      setMsg('Please accept the declaration to continue.');
       return;
     }
 
-    const res = await fetch("/api/profile/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ fullname: fullName, role }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data?.error || "Failed to create profile");
-    }
-
-    setSuccessMessage(`Profile created for ${data.profile.fullname}!`);
-    setFullName("");
-    setRole("player");
-    setShowCreateForm(false);
-    loadProfiles();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "An unexpected error occurred";
-    setError(message);
-  } finally {
-    setCreating(false);
-  }
-}
-
-
-  async function handleDeleteProfile(id: string) {
+    setSubmitting(true);
     try {
-      const res = await fetch(`/api/profile/${id}`, {
-        method: 'DELETE'
+      const res = await fetch('/api/profiles/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullname,
+          role,
+          team_id: teamId || null,
+          jersey_number: jerseyNum,
+          position: position || null,
+          dob: dob || null,
+          contact_email: email || null,
+          contact_phone: phone || null,
+          notes: notes || null,
+        }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data?.error || 'Failed to delete profile');
+      const text = await res.text();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let json: any = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`Server did not return JSON. Response: ${text.slice(0, 120)}…`);
       }
 
-      setSuccessMessage('Profile deleted successfully');
-      loadProfiles();
+      if (!res.ok) throw new Error(json.error || 'Failed to create player');
+
+      setMsg(`✅ Player created: ${json.profile.fullname}`);
+      // Reset form
+      setFullname('');
+      setRole('player');
+      setTeamId('');
+      setJersey('');
+      setPosition('');
+      setDob('');
+      setEmail('');
+      setPhone('');
+      setNotes('');
+      setAgree(false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to delete profile';
-      alert('Error: ' + message);
+      setMsg(`❌ ${err instanceof Error ? err.message : 'Unexpected error'}`);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <Link 
-          href={`/tournament/${tournamentId}`}
-          style={{
-            display: 'inline-block',
-            marginBottom: 16,
-            color: '#3b82f6',
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600
-          }}
-        >
-          ← Back to Tournament
-        </Link>
-        
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 16
-        }}>
-          <div>
-            <h1 style={{ 
-              fontSize: 32, 
-              fontWeight: 700,
-              margin: '0 0 8px 0',
-              color: '#111827'
-            }}>
-              Player Management
-            </h1>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
-              {profiles.length} {profiles.length === 1 ? 'profile' : 'profiles'} found
-            </p>
-          </div>
+    <div style={{ maxWidth: 760, margin: '24px auto', padding: 16 }}>
+      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12 }}>Create Player (No Login)</h1>
+      <p style={{ color: '#6b7280', marginBottom: 20 }}>
+        Create a player profile with optional details. No sign-in required.
+      </p>
 
+      {/* Form container */}
+      <form onSubmit={handleSubmit} style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 16,
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 12,
+        padding: 16
+      }}>
+        <div style={{ gridColumn: '1 / -1', display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
+          <Field label="Full name">
+            <input
+              value={fullname}
+              onChange={(e) => setFullname(e.target.value)}
+              placeholder="Jane Doe"
+              required
+              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+            />
+          </Field>
+
+          <Field label="Role">
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+            >
+              <option value="player">Player</option>
+              <option value="coach">Coach</option>
+              <option value="manager">Manager</option>
+            </select>
+          </Field>
+        </div>
+
+        <Field label="Team">
+          {loadingTeams ? (
+            <div style={{ padding: 10, color: '#6b7280' }}>Loading teams…</div>
+          ) : (
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+            >
+              <option value="">No team</option>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          )}
+        </Field>
+
+        <Field label="Jersey number" hint="Optional, numeric">
+          <input
+            value={jersey}
+            onChange={(e) => setJersey(e.target.value)}
+            inputMode="numeric"
+            placeholder="10"
+            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+          />
+        </Field>
+
+        <Field label="Preferred position">
+          <input
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+            placeholder="Cutter, Handler, etc."
+            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+          />
+        </Field>
+
+        <Field label="Date of birth">
+          <input
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+          />
+        </Field>
+
+        <Field label="Contact email">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="player@example.com"
+            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+          />
+        </Field>
+
+        <Field label="Contact phone">
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+91 98765 43210"
+            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+          />
+        </Field>
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <Field label="Notes">
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              placeholder="Medical, availability, preferences…"
+              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
+            />
+          </Field>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+          <span style={{ fontSize: 13, color: '#374151' }}>
+            I confirm the information is correct and I have consent to submit it.
+          </span>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
           <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#10b981',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 600
+            type="button"
+            onClick={() => {
+              setFullname(''); setRole('player'); setTeamId(''); setJersey(''); setPosition('');
+              setDob(''); setEmail(''); setPhone(''); setNotes(''); setAgree(false); setMsg(null);
             }}
+            style={{ padding: '10px 16px', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 6, cursor: 'pointer' }}
           >
-            {showCreateForm ? 'Cancel' : '+ Create Profile'}
+            Clear
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{ padding: '10px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? 'Creating…' : 'Create Player'}
           </button>
         </div>
-      </div>
+      </form>
 
-      {/* Success Message */}
-      {successMessage && (
+      {msg && (
         <div style={{
-          padding: 16,
-          backgroundColor: '#d1fae5',
-          border: '1px solid #6ee7b7',
+          marginTop: 12,
+          padding: 12,
+          backgroundColor: msg.startsWith('✅') ? '#ecfdf5' : '#fef2f2',
+          border: `1px solid ${msg.startsWith('✅') ? '#a7f3d0' : '#fecaca'}`,
           borderRadius: 8,
-          marginBottom: 24,
-          color: '#065f46',
-          fontSize: 14
+          color: msg.startsWith('✅') ? '#065f46' : '#991b1b'
         }}>
-          ✅ {successMessage}
-        </div>
-      )}
-
-      {/* Create Profile Form */}
-      {showCreateForm && (
-        <div style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: 12,
-          padding: 24,
-          marginBottom: 24,
-          backgroundColor: '#f9fafb'
-        }}>
-          <h2 style={{
-            margin: '0 0 16px 0',
-            fontSize: 18,
-            fontWeight: 700,
-            color: '#111827'
-          }}>
-            Create New Profile
-          </h2>
-
-          <form onSubmit={handleCreateProfile}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#374151'
-              }}>
-                Full Name *
-              </label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g., John Doe"
-                required
-                disabled={creating}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  backgroundColor: creating ? '#f3f4f6' : '#fff'
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#374151'
-              }}>
-                Role *
-              </label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                disabled={creating}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  backgroundColor: creating ? '#f3f4f6' : '#fff'
-                }}
-              >
-                <option value="player">Player</option>
-                <option value="coach">Coach</option>
-                <option value="td">Tournament Director</option>
-                <option value="volunteer">Volunteer</option>
-                <option value="guardian">Guardian</option>
-              </select>
-            </div>
-
-            {error && (
-              <div style={{
-                padding: 12,
-                backgroundColor: '#fee2e2',
-                border: '1px solid #fecaca',
-                borderRadius: 6,
-                marginBottom: 16,
-                fontSize: 14,
-                color: '#991b1b'
-              }}>
-                ❌ {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={creating}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: creating ? '#9ca3af' : '#10b981',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                cursor: creating ? 'not-allowed' : 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}
-            >
-              {creating ? 'Creating...' : 'Create Profile'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div style={{
-        marginBottom: 24,
-        display: 'grid',
-        gridTemplateColumns: '1fr 200px',
-        gap: 16
-      }}>
-        {/* Search */}
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name..."
-          style={{
-            padding: '10px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: 6,
-            fontSize: 14
-          }}
-        />
-
-        {/* Role Filter */}
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          style={{
-            padding: '10px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: 6,
-            fontSize: 14
-          }}
-        >
-          <option value="all">All Roles</option>
-          <option value="player">Players</option>
-          <option value="coach">Coaches</option>
-          <option value="td">TDs</option>
-          <option value="volunteer">Volunteers</option>
-          <option value="guardian">Guardians</option>
-        </select>
-      </div>
-
-      {/* Profiles Grid */}
-      {loading ? (
-        <div style={{
-          textAlign: 'center',
-          padding: 60,
-          color: '#6b7280'
-        }}>
-          Loading profiles...
-        </div>
-      ) : profiles.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: 60,
-          border: '2px dashed #d1d5db',
-          borderRadius: 12,
-          color: '#9ca3af'
-        }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>👤</div>
-          <p style={{ fontSize: 16, margin: '0 0 8px 0', fontWeight: 600 }}>
-            No profiles found
-          </p>
-          <p style={{ fontSize: 14, margin: '0 0 16px 0' }}>
-            {search || roleFilter !== 'all' 
-              ? 'Try adjusting your filters' 
-              : 'Create your first profile to get started'}
-          </p>
-          {!showCreateForm && (
-            <button
-              onClick={() => setShowCreateForm(true)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#3b82f6',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}
-            >
-              Create First Profile
-            </button>
-          )}
-        </div>
-      ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: 16
-        }}>
-          {profiles.map((profile) => (
-            <PlayerProfileCard
-              key={profile.id}
-              profile={profile}
-              showActions={true}
-              onEdit={(id) => alert('Edit functionality coming soon')}
-              onDelete={handleDeleteProfile}
-            />
-          ))}
+          {msg}
         </div>
       )}
     </div>
