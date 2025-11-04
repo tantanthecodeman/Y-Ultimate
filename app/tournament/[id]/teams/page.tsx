@@ -170,7 +170,6 @@ export default function TeamsManagementPage() {
               {teams.map((team) => (
                 <div
                   key={team.id}
-                  onClick={() => setSelectedTeam(team.id)}
                   style={{
                     padding: 16,
                     backgroundColor: selectedTeam === team.id ? '#dbeafe' : '#fff',
@@ -181,20 +180,44 @@ export default function TeamsManagementPage() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  <div style={{
-                    fontWeight: 600,
-                    fontSize: 16,
-                    color: '#111827',
-                    marginBottom: 4
-                  }}>
-                    {team.name}
+                  <div
+                    onClick={() => setSelectedTeam(team.id)}
+                    style={{ marginBottom: 12 }}
+                  >
+                    <div style={{
+                      fontWeight: 600,
+                      fontSize: 16,
+                      color: '#111827',
+                      marginBottom: 4
+                    }}>
+                      {team.name}
+                    </div>
+                    <div style={{
+                      fontSize: 12,
+                      color: '#6b7280'
+                    }}>
+                      {team.captain ? `👑 ${team.captain.full_name}` : 'No captain'}
+                    </div>
                   </div>
-                  <div style={{
-                    fontSize: 12,
-                    color: '#6b7280'
-                  }}>
-                    {team.captain ? `👑 ${team.captain.full_name}` : 'No captain'}
-                  </div>
+                  
+                  <Link href={`/tournament/${tournamentId}/teams/${team.id}`}>
+                    <button
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        backgroundColor: '#3b82f6',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: 600
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Manage Roster →
+                    </button>
+                  </Link>
                 </div>
               ))}
             </div>
