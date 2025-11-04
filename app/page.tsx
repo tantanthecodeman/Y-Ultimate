@@ -8,6 +8,7 @@ import {supabase} from "@/lib/supabaseClient";
 type UserLike = { email?: string | null } | null | unknown;
 
 function isUserWithEmail(u: UserLike): u is { email: string } {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return typeof u === "object" && u !== null && "email" in (u as any) && typeof (u as any).email === "string";
 }
 

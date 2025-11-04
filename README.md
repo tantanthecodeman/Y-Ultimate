@@ -184,7 +184,7 @@ Y-Ultimate/
 
 | Name              | Role                 |
 | ----------------- | -------------------- |
-| Tanay Gujhrathi   | Front-End Developer  |
+| Tanay Gujarathi   | Front-End Developer  |
 | Ronit Shrivastava | Back-End Developer   |
 | Sahil Sinha       | Full Stack Developer |
 
