@@ -7,6 +7,7 @@ import { Tournament, Match, Standing, Team } from '../lib/types';
 import MatchCard from '../components/MatchCard';
 import StandingsTable from '../components/StandingsTable';
 
+
 type TabType = 'overview' | 'matches' | 'standings' | 'teams';
 
 export default function TournamentDashboard() {
