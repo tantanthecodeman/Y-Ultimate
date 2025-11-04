@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClients';
+import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(req: Request) {
   try {
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ session });
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });
   }
 }
