@@ -106,6 +106,14 @@ export default function TournamentHome() {
       margin: '0 auto' 
     }}>
       {/* Header */}
+      {/* Page header */}
+<div className="hero-ribbon" style={{ textAlign: "center" }}>
+  <h1 className="hero-title">Tournaments</h1>
+  <p className="hero-sub">Create events, register teams, schedule matches, and track standings</p>
+</div>
+
+
+
       <div style={{ 
         marginBottom: 32,
         display: 'flex',
