@@ -366,6 +366,21 @@ export default function TournamentDashboard() {
                   👥 Manage Teams
                 </button>
               </Link>
+
+              <Link href={`/tournament/${tournamentId}/players`}>
+                <button style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#3b82f6',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 600
+                }}>
+                  👤 Manage Players
+                </button>
+              </Link>
               
               <Link href={`/tournament/${tournamentId}/matches`}>
                 <button style={{
