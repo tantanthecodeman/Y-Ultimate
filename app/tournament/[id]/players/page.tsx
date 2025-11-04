@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Profile } from '../../lib/types';
 import PlayerProfileCard from '../../components/PlayerProfileCard';
+import { supabase } from '@/lib/supabaseClient'; 
 
 export default function PlayersManagementPage() {
   const params = useParams();
@@ -51,9 +52,22 @@ export default function PlayersManagementPage() {
     setSuccessMessage(null);
 
     try {
+      // Get current session and access token from Supabase client
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token || sessionData?.session?.access_token || null;
+
+      if (!token) {
+        setError('You must be logged in to create a profile.');
+        setCreating(false);
+        return;
+      }
+
       const res = await fetch('/api/profile/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` // <-- include token in header
+        },
         body: JSON.stringify({ full_name: fullName, role })
       });
 
