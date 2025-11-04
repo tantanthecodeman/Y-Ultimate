@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { UserHeader } from "./auth/components/UserHeader";
 import { ChildrenList } from "./components/ChildrenList";
@@ -15,22 +14,20 @@ export default function CoachingDashboard() {
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: "children", label: "Children", icon: "👶" },
     { key: "sessions", label: "Sessions", icon: "📅" },
-    { key: "attendance", label: "Attendance", icon: "✓" },
+    { key: "attendance", label: "Attendance", icon: "✅" },
     { key: "reports", label: "Reports", icon: "📊" },
   ];
 
   return (
     <div style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}>
-      {/* Header with user info and logout */}
       <UserHeader />
-
       <div style={{ padding: "1.5rem" }}>
         <h1 style={{ fontSize: "1.8rem", marginBottom: "1rem", color: "#111827" }}>
           Coaching Programme Dashboard
         </h1>
 
         {/* Tab Buttons */}
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: 'wrap' }}>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -44,9 +41,9 @@ export default function CoachingDashboard() {
                 cursor: "pointer",
                 transition: "all 0.2s",
                 fontWeight: tab === t.key ? 600 : 400,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
               }}
             >
               <span>{t.icon}</span>
@@ -56,14 +53,7 @@ export default function CoachingDashboard() {
         </div>
 
         {/* Tab Views */}
-        <div
-          style={{
-            background: "white",
-            borderRadius: "8px",
-            padding: "1rem",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-          }}
-        >
+        <div style={{ background: "white", borderRadius: "8px", padding: "1rem", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
           {tab === "children" && <ChildrenList />}
           {tab === "sessions" && <SessionsList />}
           {tab === "attendance" && <AttendanceList />}
