@@ -100,235 +100,83 @@ export default function TournamentHome() {
   }
 
   return (
-    <main style={{ 
-      padding: 24, 
-      maxWidth: 1200, 
-      margin: '0 auto' 
-    }}>
-      {/* Header */}
-      {/* Page header */}
-<div className="hero-ribbon" style={{ textAlign: "center" }}>
-  <h1 className="hero-title">Tournaments</h1>
-  <p className="hero-sub">Create events, register teams, schedule matches, and track standings</p>
-</div>
-
-
-
-      <div style={{ 
-        marginBottom: 32,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div>
-          <h1 style={{ 
-            fontSize: 32, 
-            fontWeight: 700,
-            margin: '0 0 8px 0',
-            color: '#111827'
-          }}>
-            Tournament Management
-          </h1>
-          <p style={{ 
-            margin: 0,
-            color: '#6b7280',
-            fontSize: 16
-          }}>
-            Create and manage Ultimate Frisbee tournaments
-          </p>
+    <main>
+      <div className="page-header">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1>TOURNAMENTS</h1>
+            <p>Create events, manage teams, track standings</p>
+          </div>
+          
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="btn btn-primary"
+          >
+            {showCreateForm ? 'Cancel' : 'Create Tournament'}
+          </button>
         </div>
-        
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#3b82f6',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}
-        >
-          {showCreateForm ? 'Cancel' : '+ Create Tournament'}
-        </button>
       </div>
 
-      {/* Success Message */}
       {successMessage && (
-        <div style={{
-          padding: 16,
-          backgroundColor: '#d1fae5',
-          border: '1px solid #6ee7b7',
-          borderRadius: 8,
-          marginBottom: 24,
-          color: '#065f46',
-          fontSize: 14
-        }}>
-          ✅ {successMessage}
-        </div>
+        <div className="alert alert-success">{successMessage}</div>
       )}
 
-      {/* Create Tournament Form */}
       {showCreateForm && (
-        <div style={{ 
-          border: '1px solid #e5e7eb', 
-          borderRadius: 12, 
-          padding: 24, 
-          marginBottom: 32,
-          backgroundColor: '#f9fafb'
-        }}>
-          <h2 style={{ 
-            marginBottom: 20,
-            fontSize: 20,
-            fontWeight: 700,
-            color: '#111827'
-          }}>
-            Create New Tournament
-          </h2>
+        <div className="card mb-4">
+          <h3 className="mb-3">NEW TOURNAMENT</h3>
 
           <form onSubmit={handleCreateTournament}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#374151'
-              }}>
-                Tournament Name *
-              </label>
+            <div className="mb-3">
+              <label>Tournament Name</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Summer Ultimate Championship 2025"
+                placeholder="Summer Championship 2025"
                 required
                 disabled={creating}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  backgroundColor: creating ? '#f3f4f6' : '#fff'
-                }}
               />
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#374151'
-              }}>
-                Location
-              </label>
+            <div className="mb-3">
+              <label>Location</label>
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g., Bangalore"
+                placeholder="Bangalore"
                 disabled={creating}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  backgroundColor: creating ? '#f3f4f6' : '#fff'
-                }}
               />
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: 16, 
-              marginBottom: 16 
-            }}>
+            <div className="grid-2 mb-3">
               <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: 6,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Start Date
-                </label>
+                <label>Start Date</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   disabled={creating}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 6,
-                    fontSize: 14,
-                    backgroundColor: creating ? '#f3f4f6' : '#fff'
-                  }}
                 />
               </div>
               
               <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: 6,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  End Date
-                </label>
+                <label>End Date</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   disabled={creating}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 6,
-                    fontSize: 14,
-                    backgroundColor: creating ? '#f3f4f6' : '#fff'
-                  }}
                 />
               </div>
             </div>
 
             {error && (
-              <div style={{
-                padding: 12,
-                backgroundColor: '#fee2e2',
-                border: '1px solid #fecaca',
-                borderRadius: 6,
-                marginBottom: 16,
-                fontSize: 14,
-                color: '#991b1b'
-              }}>
-                ❌ {error}
-              </div>
+              <div className="alert alert-error mb-3">{error}</div>
             )}
 
             <button 
               type="submit" 
               disabled={creating}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: creating ? '#9ca3af' : '#10b981',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                cursor: creating ? 'not-allowed' : 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}
+              className="btn btn-secondary"
             >
               {creating ? 'Creating...' : 'Create Tournament'}
             </button>
@@ -336,44 +184,19 @@ export default function TournamentHome() {
         </div>
       )}
 
-      {/* Tournaments List */}
       <div>
-        <h2 style={{ 
-          marginBottom: 20,
-          fontSize: 24,
-          fontWeight: 700,
-          color: '#111827'
-        }}>
-          All Tournaments
-        </h2>
-
         {loading ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: 60,
-            color: '#6b7280' 
-          }}>
-            Loading tournaments...
-          </div>
+          <div className="loading">Loading tournaments...</div>
         ) : tournaments.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: 60,
-            border: '2px dashed #d1d5db',
-            borderRadius: 12,
-            color: '#9ca3af'
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
-            <p style={{ fontSize: 16, margin: 0 }}>
-              No tournaments created yet. Click &quot;Create Tournament&quot; to get started!
-            </p>
+          <div className="empty-state">
+            <h3>NO TOURNAMENTS YET</h3>
+            <p>Create your first tournament to get started</p>
+            <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
+              Create Tournament
+            </button>
           </div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gap: 16,
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))'
-          }}>
+          <div className="grid-auto">
             {tournaments.map((tournament) => (
               <TournamentCard
                 key={tournament.id}

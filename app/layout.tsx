@@ -14,11 +14,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <header className="site-header">
+          <div className="container">
+            <a href="/" className="site-logo">Y‑ULTIMATE</a>
+          </div>
+        </header>
         <div className="container">
-          <header className="header">
-            <div className="brand">Y‑Ultimate</div>
-          </header>
           {children}
         </div>
       </body>
