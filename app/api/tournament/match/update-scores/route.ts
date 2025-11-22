@@ -44,7 +44,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ match: data });
-  } catch (error: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Internal error" },
       { status: 500 }

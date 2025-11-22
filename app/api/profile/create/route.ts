@@ -60,7 +60,8 @@ export async function POST(req: Request) {
 
     // 5) Respond JSON
     return NextResponse.json({ profile: data }, { status: 201 });
-  } catch (err: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : 'Unexpected error';
     return NextResponse.json({ error: message }, { status: 500 });
   }

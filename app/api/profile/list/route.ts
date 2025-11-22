@@ -29,7 +29,8 @@ export async function GET(req: Request) {
     }
     
     return NextResponse.json({ profiles: data || [] });
-  } catch (err: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : 'An unexpected error occurred';
     return NextResponse.json({ error: message }, { status: 500 });
   }

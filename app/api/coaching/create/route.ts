@@ -31,7 +31,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ session });
-  } catch (err: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });
   }
 }

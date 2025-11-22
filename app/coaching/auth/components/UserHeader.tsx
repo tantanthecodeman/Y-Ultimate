@@ -1,8 +1,9 @@
-"use client";
+// app/coaching/auth/components/UserHeader.tsx
+'use client';
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { LogoutButton } from "./LogoutButton";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { Button } from '@/lib/ui/components';
 
 export function UserHeader() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -15,22 +16,54 @@ export function UserHeader() {
     getUser();
   }, []);
 
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = '/coaching/auth/login';
+  }
+
   return (
-    <div
+    <header
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        backgroundColor: "#f5f5f5",
-        padding: "0.75rem 1.5rem",
-        borderBottom: "1px solid #ddd",
+        background: '#FFF',
+        borderBottom: '3px solid #000',
+        padding: '20px 0',
       }}
     >
-      <h3 style={{ margin: 0 }}>Coaching Dashboard</h3>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-        <span>{userEmail || "Loading..."}</span>
-        <LogoutButton />
+      <div className="container">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Bangers, cursive',
+              fontSize: '20px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}
+          >
+            COACHING DASHBOARD
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+            }}
+          >
+            <span style={{ fontSize: '14px', color: '#6B7280' }}>
+              {userEmail || 'Loading...'}
+            </span>
+            <Button variant="secondary" size="sm" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

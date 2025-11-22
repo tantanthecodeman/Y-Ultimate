@@ -19,7 +19,8 @@ export async function GET(req: NextRequest, context: any) {
     if (!data) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
     return NextResponse.json({ profile: data });
-  } catch (err: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : 'An unexpected error occurred';
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -58,7 +59,8 @@ export async function PUT(req: NextRequest, context: any) {
     if (!data) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
     return NextResponse.json({ profile: data });
-  } catch (err: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : 'An unexpected error occurred';
     return NextResponse.json({ error: message }, { status: 500 });
   }

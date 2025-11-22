@@ -1,23 +1,21 @@
+// app/tournament/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { TapeBanner, Card, Button, PageHeader, Modal } from '@/lib/ui/components';
 import { Tournament } from './lib/types';
-import TournamentCard from './components/TournamentCard';
 
-export default function TournamentHome() {
+export default function TournamentPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  
-  // Form state
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    location: '',
+    start_date: '',
+    end_date: '',
+  });
 
   useEffect(() => {
     loadTournaments();
@@ -28,11 +26,8 @@ export default function TournamentHome() {
       setLoading(true);
       const res = await fetch('/api/tournament/list');
       const data = await res.json();
-      
-      if (res.ok) {
-        setTournaments(data.tournaments || []);
-      }
-    } catch (err: unknown) {
+      setTournaments(data.tournaments || []);
+    } catch (err) {
       console.error('Failed to load tournaments');
     } finally {
       setLoading(false);
@@ -41,170 +36,130 @@ export default function TournamentHome() {
 
   async function handleCreateTournament(e: React.FormEvent) {
     e.preventDefault();
-    setCreating(true);
-    setError(null);
-    setSuccessMessage(null);
-
     try {
       const res = await fetch('/api/tournament/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name, 
-          location: location || null, 
-          start_date: startDate || null, 
-          end_date: endDate || null 
-        })
+        body: JSON.stringify(formData),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to create tournament');
+      if (res.ok) {
+        setShowModal(false);
+        setFormData({ name: '', location: '', start_date: '', end_date: '' });
+        loadTournaments();
       }
-
-      setSuccessMessage(`Tournament "${data.tournament.name}" created successfully!`);
-      setName('');
-      setLocation('');
-      setStartDate('');
-      setEndDate('');
-      setShowCreateForm(false);
-      
-      // Reload tournaments
-      loadTournaments();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(message);
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function handleDeleteTournament(id: string) {
-    try {
-      const res = await fetch(`/api/tournament/${id}`, {
-        method: 'DELETE'
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data?.error || 'Failed to delete tournament');
-      }
-
-      setSuccessMessage('Tournament deleted successfully');
-      loadTournaments();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to delete tournament';
-      alert('Error: ' + message);
+    } catch (err) {
+      console.error('Failed to create tournament');
     }
   }
 
   return (
-    <main>
-      <div className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1>TOURNAMENTS</h1>
-            <p>Create events, manage teams, track standings</p>
+    <main style={{ minHeight: '100vh', paddingBottom: '64px' }}>
+      {/* Header */}
+      <header style={{ borderBottom: '3px solid #000', padding: '24px 0', marginBottom: '48px' }}>
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <TapeBanner color="blue">LEAGUE MODE</TapeBanner>
+            <Button
+              variant="primary"
+              onClick={() => setShowModal(true)}
+            >
+              + NEW TOURNAMENT
+            </Button>
           </div>
-          
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="btn btn-primary"
-          >
-            {showCreateForm ? 'Cancel' : 'Create Tournament'}
-          </button>
         </div>
-      </div>
+      </header>
 
-      {successMessage && (
-        <div className="alert alert-success">{successMessage}</div>
-      )}
+      <div className="container">
+        <PageHeader
+          title="Tournaments"
+          subtitle="Create, manage, and dominate the leaderboard"
+        />
 
-      {showCreateForm && (
-        <div className="card mb-4">
-          <h3 className="mb-3">NEW TOURNAMENT</h3>
-
+        {/* Create Modal */}
+        <Modal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          title="Create Tournament"
+        >
           <form onSubmit={handleCreateTournament}>
             <div className="mb-3">
               <label>Tournament Name</label>
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Summer Championship 2025"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                disabled={creating}
+                placeholder="e.g., Summer Championship"
               />
             </div>
-
             <div className="mb-3">
               <label>Location</label>
               <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Bangalore"
-                disabled={creating}
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="e.g., Bangalore"
               />
             </div>
-
-            <div className="grid-2 mb-3">
-              <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="mb-3">
                 <label>Start Date</label>
                 <input
                   type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  disabled={creating}
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                 />
               </div>
-              
-              <div>
+              <div className="mb-3">
                 <label>End Date</label>
                 <input
                   type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  disabled={creating}
+                  value={formData.end_date}
+                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                 />
               </div>
             </div>
-
-            {error && (
-              <div className="alert alert-error mb-3">{error}</div>
-            )}
-
-            <button 
-              type="submit" 
-              disabled={creating}
-              className="btn btn-secondary"
-            >
-              {creating ? 'Creating...' : 'Create Tournament'}
-            </button>
+            <Button type="submit" variant="primary" className="w-full">
+              CREATE
+            </Button>
           </form>
-        </div>
-      )}
+        </Modal>
 
-      <div>
+        {/* Tournament List */}
         {loading ? (
-          <div className="loading">Loading tournaments...</div>
+          <div className="loading">LOADING...</div>
         ) : tournaments.length === 0 ? (
           <div className="empty-state">
-            <h3>NO TOURNAMENTS YET</h3>
-            <p>Create your first tournament to get started</p>
-            <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-              Create Tournament
-            </button>
+            <div className="empty-state-icon">🏆</div>
+            <div className="empty-state-title">NO TOURNAMENTS YET</div>
+            <p className="empty-state-text">Time to start your first tournament!</p>
+            <Button variant="primary" onClick={() => setShowModal(true)}>
+              CREATE TOURNAMENT
+            </Button>
           </div>
         ) : (
-          <div className="grid-auto">
+          <div className="grid grid-3">
             {tournaments.map((tournament) => (
-              <TournamentCard
-                key={tournament.id}
-                tournament={tournament}
-                showActions={true}
-                onEdit={(id) => window.location.href = `/tournament/${id}/edit`}
-                onDelete={handleDeleteTournament}
-              />
+              <Link key={tournament.id} href={`/tournament/${tournament.id}`}>
+                <Card
+                  sticker={{
+                    label: `${tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'TBD'}`,
+                  }}
+                >
+                  <h3 className="mb-2">{tournament.name}</h3>
+                  {tournament.location && (
+                    <p className="mb-2">📍 {tournament.location}</p>
+                  )}
+                  <p className="mb-4 text-subtle">
+                    {tournament.start_date && tournament.end_date
+                      ? `${new Date(tournament.start_date).toLocaleDateString()} - ${new Date(tournament.end_date).toLocaleDateString()}`
+                      : 'Dates TBD'}
+                  </p>
+                  <Button variant="primary" className="w-full">
+                    MANAGE →
+                  </Button>
+                </Card>
+              </Link>
             ))}
           </div>
         )}

@@ -147,91 +147,82 @@ export default function TournamentDashboard() {
   return (
     <div style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <Link 
-          href="/tournament"
-          style={{
-            display: 'inline-block',
-            marginBottom: 16,
-            color: '#3b82f6',
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600
-          }}
-        >
-          ← Back to Tournaments
-        </Link>
-        
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          gap: 16
-        }}>
-          <div>
-            <h1 style={{ 
-              fontSize: 32, 
-              fontWeight: 700,
-              margin: '0 0 8px 0',
-              color: '#111827'
-            }}>
-              {tournament.name}
-            </h1>
-            <div style={{ 
-              fontSize: 14,
-              color: '#6b7280',
-              display: 'flex',
-              gap: 16,
-              flexWrap: 'wrap'
-            }}>
-              {tournament.start_date && tournament.end_date && (
-                <span>
-                  📅 {new Date(tournament.start_date).toLocaleDateString()} - {new Date(tournament.end_date).toLocaleDateString()}
-                </span>
-              )}
-              {tournament.location && (
-                <span>📍 {tournament.location}</span>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Link href={`/tournament/${tournamentId}/edit`}>
-              <button style={{
-                padding: '10px 20px',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: '1px solid #d1d5db',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}>
-                Edit Tournament
-              </button>
-            </Link>
-            
-            {matches.length === 0 && teams.length >= 2 && (
-              <button
-                onClick={handleGenerateMatches}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#10b981',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  fontWeight: 600
-                }}
-              >
-                Generate Matches
-              </button>
-            )}
-          </div>
-        </div>
+<div style={{ 
+  marginBottom: 48,
+  paddingBottom: 24,
+  borderBottom: '3px solid var(--border)'
+}}>
+  <Link 
+    href="/tournament"
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 24,
+      fontSize: 14,
+      fontWeight: 600,
+      color: 'var(--muted)',
+      textDecoration: 'none',
+      transition: 'color 0.2s'
+    }}
+    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--fg)'}
+    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+  >
+    ← BACK TO TOURNAMENTS
+  </Link>
+  
+  <div style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    gap: 24
+  }}>
+    <div>
+      <div className="accent-bar" style={{ marginBottom: 16 }}></div>
+      <h1 style={{ 
+        margin: '0 0 12px 0',
+        fontFamily: 'var(--font-display)'
+      }}>
+        {tournament.name}
+      </h1>
+      <div style={{ 
+        fontSize: 15,
+        color: 'var(--muted)',
+        display: 'flex',
+        gap: 24,
+        flexWrap: 'wrap',
+        fontWeight: 600
+      }}>
+        {tournament.start_date && tournament.end_date && (
+          <span>
+            📅 {new Date(tournament.start_date).toLocaleDateString()} - {new Date(tournament.end_date).toLocaleDateString()}
+          </span>
+        )}
+        {tournament.location && (
+          <span>📍 {tournament.location}</span>
+        )}
       </div>
+    </div>
+
+    <div style={{ display: 'flex', gap: 12 }}>
+      <Link href={`/tournament/${tournamentId}/edit`}>
+        <button className="btn btn-ghost">
+          EDIT TOURNAMENT
+        </button>
+      </Link>
+      
+      {matches.length === 0 && teams.length >= 2 && (
+        <button
+          onClick={handleGenerateMatches}
+          className="btn btn-primary"
+        >
+          GENERATE MATCHES
+        </button>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* Tabs */}
       <div style={{ 

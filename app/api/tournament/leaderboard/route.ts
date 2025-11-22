@@ -99,7 +99,8 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ standings });
-  } catch (err: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
