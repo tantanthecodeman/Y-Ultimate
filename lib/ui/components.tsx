@@ -1,5 +1,119 @@
 // lib/ui/components.tsx
 import React from 'react';
+import Link from 'next/link';
+
+/* Navigation Header */
+export function NavigationHeader({ currentPage }: { currentPage?: 'home' | 'tournament' | 'coaching' }) {
+  return (
+    <header style={{ 
+      borderBottom: '3px solid #000', 
+      padding: '20px 0', 
+      marginBottom: '48px',
+      background: '#FFF'
+    }}>
+      <div className="container">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #E63946, #1D4ED8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: 'rotate(-6deg)',
+                border: '2px solid #000',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
+              }}>
+                <span style={{
+                  fontFamily: 'Bangers, cursive',
+                  color: 'white',
+                  fontSize: '24px'
+                }}>
+                  Y
+                </span>
+              </div>
+              <div>
+                <div style={{
+                  fontFamily: 'Bangers, cursive',
+                  fontSize: '22px',
+                  lineHeight: '1',
+                  color: '#0F1724'
+                }}>
+                  Y-ULTIMATE
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#6B7280',
+                  marginTop: '2px'
+                }}>
+                  Tournament & Coaching portal
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <nav style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            fontSize: '13px'
+          }}>
+            <Link href="/" style={{
+              fontWeight: currentPage === 'home' ? 800 : 600,
+              textDecoration: 'none',
+              color: '#0F1724',
+              position: 'relative',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: currentPage === 'home' ? '#F3F4F6' : 'transparent'
+            }}>
+              HOME
+            </Link>
+            <Link href="/tournament" style={{
+              fontWeight: currentPage === 'tournament' ? 800 : 600,
+              textDecoration: 'none',
+              color: '#0F1724',
+              position: 'relative',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: currentPage === 'tournament' ? '#F3F4F6' : 'transparent'
+            }}>
+              TOURNAMENT
+            </Link>
+            <Link href="/coaching" style={{
+              fontWeight: currentPage === 'coaching' ? 800 : 600,
+              textDecoration: 'none',
+              color: '#0F1724',
+              position: 'relative',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: currentPage === 'coaching' ? '#F3F4F6' : 'transparent'
+            }}>
+              COACHING
+            </Link>
+            <Link href="/coaching/auth/login">
+              <button className="btn btn-primary" style={{
+                padding: '8px 16px',
+                fontSize: '12px'
+              }}>
+                Sign in
+              </button>
+            </Link>
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+}
 
 /* Tape Banner */
 export function TapeBanner({
@@ -26,12 +140,16 @@ export function Card({
   rotation = true,
   white = false,
   sticker,
+  onClick,
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
   rotation?: boolean;
   white?: boolean;
   sticker?: { label: string; color?: 'red' | 'blue' };
+  onClick?: (e: React.MouseEvent) => void;
+  style?: React.CSSProperties;
 }) {
   const classes = [
     'card',
@@ -41,7 +159,7 @@ export function Card({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={classes}>
+    <div className={classes} onClick={onClick} style={style}>
       {children}
       {sticker && (
         <div className={`tape-sticker ${sticker.color === 'blue' ? 'blue' : ''}`}>
@@ -70,15 +188,9 @@ export function Button({
     blue: 'btn-accent-blue',
   }[variant];
 
-  const sizeClass = {
-    sm: 'text-sm px-4 py-2',
-    md: 'text-base px-6 py-3',
-    lg: 'text-lg px-8 py-4',
-  }[size];
-
   return (
     <button
-      className={`btn ${variantClass} ${sizeClass} ${className}`}
+      className={`btn ${variantClass} ${className}`}
       {...props}
     >
       {children}
@@ -99,27 +211,62 @@ export function Scoreboard({
   score2: number;
 }) {
   return (
-    <div
-      style={{
-        background: '#000',
-        color: '#FFF',
-        border: '3px solid #000',
-        padding: '16px 24px',
-        fontFamily: 'Bangers, cursive',
-        fontSize: '20px',
-        fontWeight: 700,
+    <div className="scoreboard">
+      <div style={{
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        borderRadius: '12px',
-        boxShadow: '0 6px 8px rgba(0,0,0,0.2)',
-      }}
-    >
-      <span>{team1}</span>
-      <span style={{ minWidth: '80px', textAlign: 'center' }}>
-        {score1} - {score2}
-      </span>
-      <span>{team2}</span>
+        gap: '12px'
+      }}>
+        <div style={{
+          padding: '4px 10px',
+          borderRadius: '999px',
+          border: '2px solid #FFF',
+          fontSize: '11px',
+          letterSpacing: '0.08em'
+        }}>
+          SCRIM SCOREBOARD
+        </div>
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          alignItems: 'center',
+          fontSize: '14px'
+        }}>
+          <span>{team1}</span>
+          <span style={{
+            minWidth: '28px',
+            textAlign: 'center',
+            padding: '2px 6px',
+            borderRadius: '6px',
+            border: '2px solid #FFF',
+            marginLeft: '2px',
+            fontSize: '16px'
+          }}>
+            {score1}
+          </span>
+          <span style={{ opacity: 0.7 }}>vs</span>
+          <span>{team2}</span>
+          <span style={{
+            minWidth: '28px',
+            textAlign: 'center',
+            padding: '2px 6px',
+            borderRadius: '6px',
+            border: '2px solid #FFF',
+            marginLeft: '2px',
+            fontSize: '16px'
+          }}>
+            {score2}
+          </span>
+        </div>
+      </div>
+      <div style={{
+        fontSize: '10px',
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        opacity: 0.8
+      }}>
+        next round auto-scheduled · 02:15
+      </div>
     </div>
   );
 }
@@ -135,7 +282,7 @@ export function StatBox({
   icon?: string;
 }) {
   return (
-    <Card white={true}>
+    <Card white={true} rotation={false}>
       {icon && (
         <div style={{ fontSize: '32px', marginBottom: '12px' }}>
           {icon}
@@ -158,7 +305,7 @@ export function StatBox({
   );
 }
 
-/* Page Layout */
+/* Page Header */
 export function PageHeader({
   title,
   subtitle,
@@ -204,22 +351,25 @@ export function Modal({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000,
+        padding: '24px'
       }}
       onClick={onClose}
     >
       <Card
-        className="w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
+        rotation={false}
+        white={true}
+        className="w-full"
+        style={{ maxWidth: '600px' }}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-        <h2 className="mb-4">{title}</h2>
+        <h2 className="mb-4" style={{
+          fontFamily: 'Bangers, cursive',
+          fontSize: '24px',
+          textTransform: 'uppercase'
+        }}>
+          {title}
+        </h2>
         {children}
-        <Button
-          variant="secondary"
-          className="mt-4 w-full"
-          onClick={onClose}
-        >
-          Close
-        </Button>
       </Card>
     </div>
   );

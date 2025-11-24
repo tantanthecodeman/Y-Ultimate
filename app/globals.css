@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* Design Tokens */
 :root {
@@ -36,17 +36,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* subtle retro grain overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(0,0,0,0.02) 0.5px, transparent 0.5px);
+  background-size: 3px 3px;
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+main, header, footer, .container {
+  position: relative;
+  z-index: 1;
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 h1 {
   font-size: clamp(32px, 6vw, 64px);
-  transform: skewY(-2deg);
 }
 
 h2 {
@@ -80,19 +98,42 @@ strong {
   display: inline-block;
   background: var(--red-tape);
   color: var(--white);
-  padding: 8px 20px;
+  padding: 10px 22px;
   border: var(--border-thick);
   font-family: var(--font-heading);
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
-  transform: rotate(2deg);
+  transform: rotate(-2deg);
   box-shadow: var(--shadow-tape);
   letter-spacing: 1px;
+  position: relative;
+}
+
+.tape-banner::before,
+.tape-banner::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 10px;
+  background: rgba(0,0,0,0.15);
+  top: 6px;
+  border-radius: 2px;
+}
+
+.tape-banner::before {
+  left: 10px;
+  transform: rotate(-8deg);
+}
+
+.tape-banner::after {
+  right: 10px;
+  transform: rotate(8deg);
 }
 
 .tape-banner.blue {
   background: var(--blue-tape);
+  transform: rotate(2deg);
 }
 
 .tape-banner.secondary {
@@ -109,8 +150,9 @@ strong {
   padding: 32px;
   box-shadow: var(--shadow-card);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform: rotate(1deg);
+  transform: rotate(-1deg);
   position: relative;
+  overflow: visible;
 }
 
 .card:hover {
@@ -133,22 +175,26 @@ strong {
 /* Tape Sticker */
 .tape-sticker {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
+  bottom: -14px;
+  left: -14px;
   background: var(--red-tape);
   color: var(--white);
-  padding: 4px 12px;
+  padding: 6px 14px;
   border: 2px solid var(--black);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  transform: rotate(-3deg);
+  transform: rotate(-8deg);
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  font-family: var(--font-heading);
+  letter-spacing: 0.5px;
+  animation: sticker-in 700ms cubic-bezier(.2,.9,.3,1);
 }
 
 .tape-sticker.blue {
   background: var(--blue-tape);
+  transform: rotate(8deg);
 }
 
 /* Buttons */
@@ -161,13 +207,14 @@ strong {
   border: var(--border-thick);
   border-radius: 32px;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  box-shadow: var(--shadow-tape);
 }
 
 .btn-primary {
@@ -177,18 +224,34 @@ strong {
 
 .btn-primary:hover {
   transform: translateY(2px);
-  box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.55);
 }
 
 .btn-primary:active {
   transform: translateY(4px);
-  box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.35);
+}
+
+.btn-primary {
+  position: relative;
+  overflow: visible;
+}
+
+.btn-primary::after{
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: inset 0 0 14px rgba(29,78,216,0.06), 0 0 0 2px rgba(0,0,0,0.02);
+  mix-blend-mode: overlay;
 }
 
 .btn-secondary {
   background: var(--white);
   color: var(--text-main);
   border: 3px dashed var(--black);
+  box-shadow: none;
 }
 
 .btn-secondary:hover {
@@ -203,7 +266,7 @@ strong {
 
 .btn-accent-red:hover {
   transform: translateY(2px);
-  box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  box-shadow: 0 4px 0 rgba(230, 57, 70, 0.6);
 }
 
 .btn-accent-blue {
@@ -213,7 +276,18 @@ strong {
 
 .btn-accent-blue:hover {
   transform: translateY(2px);
-  box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  box-shadow: 0 4px 0 rgba(29, 78, 216, 0.6);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-main);
+  border: var(--border-thick);
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background: var(--bg);
 }
 
 /* Tables */
@@ -222,6 +296,8 @@ table {
   border-collapse: collapse;
   border: var(--border-thick);
   background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 thead {
@@ -256,11 +332,12 @@ tbody tr:last-child td {
 label {
   display: block;
   font-family: var(--font-heading);
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: 0.5px;
+  color: var(--text-main);
 }
 
 input,
@@ -294,7 +371,24 @@ textarea:focus {
   font-family: var(--font-heading);
   font-size: clamp(28px, 5vw, 56px);
   margin-bottom: 16px;
-  transform: skewY(-1deg);
+  text-transform: uppercase;
+  position: relative;
+  display: inline-block;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.10);
+}
+
+/* layered arcade shadow for page titles */
+.page-title::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: -1;
+  color: rgba(0,0,0,0.18);
+  transform: skewX(-6deg);
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
 }
 
 .page-subtitle {
@@ -343,6 +437,7 @@ textarea:focus {
   font-family: var(--font-heading);
   font-size: 24px;
   margin-bottom: 8px;
+  text-transform: uppercase;
 }
 
 .empty-state-text {
@@ -385,6 +480,56 @@ textarea:focus {
   min-height: 400px;
   font-family: var(--font-heading);
   font-size: 24px;
+  text-transform: uppercase;
+}
+
+/* Scoreboard */
+.scoreboard {
+  background: var(--black);
+  color: var(--white);
+  border: var(--border-thick);
+  padding: 16px 24px;
+  border-radius: 16px;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-tape);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.scoreboard .score {
+  min-width: 80px;
+  text-align: center;
+  font-size: 24px;
+}
+
+/* score-box for individual digits on hero scoreboard */
+.score-box {
+  display: inline-block;
+  min-width: 28px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 2px solid #FFFFFF;
+  margin-left: 2px;
+  font-family: var(--font-heading);
+  font-size: 16px;
+}
+
+.score-box:hover {
+  animation: score-pop .42s cubic-bezier(.2,.9,.3,1);
+}
+
+/* Accent Bar */
+.accent-bar {
+  width: 60px;
+  height: 4px;
+  background: var(--red-tape);
+  border-radius: 2px;
 }
 
 /* Utilities */
@@ -398,6 +543,10 @@ textarea:focus {
 
 .text-uppercase {
   text-transform: uppercase;
+}
+
+.w-full {
+  width: 100%;
 }
 
 .mb-1 { margin-bottom: 8px; }
@@ -414,6 +563,20 @@ textarea:focus {
 .gap-2 { gap: 16px; }
 .gap-3 { gap: 24px; }
 
+.flex-1 { flex: 1; }
+
+/* Tiny pixel sprite accent */
+.pixel-sprite{
+  width:18px;
+  height:18px;
+  display:inline-block;
+  border:2px solid #000;
+  background: linear-gradient(135deg,#fff 0 40%, transparent 40% 100%);
+  transform: rotate(12deg);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.12);
+  border-radius:3px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .container {
@@ -424,16 +587,10 @@ textarea:focus {
     font-size: 32px;
   }
 
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
-
-  .grid-3 {
-    grid-template-columns: 1fr;
-  }
-
+  .grid-2,
+  .grid-3,
   .grid-4 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .card {
@@ -443,4 +600,192 @@ textarea:focus {
   .btn {
     width: 100%;
   }
+
+  .scoreboard {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
 }
+
+/* tape wobble for tape-banner */
+@keyframes tape-wobble {
+  0%   { transform: rotate(-2deg) translateY(0); }
+  30%  { transform: rotate(3deg) translateY(-2px); }
+  60%  { transform: rotate(-3deg) translateY(0); }
+  100% { transform: rotate(-2deg) translateY(0); }
+}
+.tape-banner:hover {
+  animation: tape-wobble 420ms ease;
+  box-shadow: 0 10px 0 rgba(0,0,0,0.38);
+}
+
+/* sticker entrance animation */
+@keyframes sticker-in {
+  0% { transform: translateY(18px) rotate(-22deg); opacity:0; }
+  60% { transform: translateY(-6px) rotate(-8deg); opacity:1; }
+  100% { transform: translateY(0) rotate(-8deg); }
+}
+
+/* score pop animation */
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.18); }
+  60% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+/* =========================
+   Gamified / Friendly UX
+   (append this to globals.css)
+   ========================= */
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .confetti, .cta-pulse, .xp-fill, .badge, .stamp { animation: none !important; transition: none !important; }
+}
+
+/* 1) Impact / XP bar (hero) */
+.xp-wrap {
+  max-width: 640px;
+  margin: 20px auto 10px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-subtle);
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:center;
+}
+.xp-meter {
+  flex: 1;
+  background: linear-gradient(90deg,#fff, #fff);
+  border: 2px dashed rgba(0,0,0,0.08);
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.xp-fill {
+  height:100%;
+  width: 56%; /* change this value to reflect real progress */
+  background: linear-gradient(90deg, var(--blue-tape), var(--red-tape));
+  box-shadow: 0 4px 0 rgba(0,0,0,0.16);
+  border-radius: 999px;
+  transition: width 700ms cubic-bezier(.2,.9,.3,1);
+}
+.xp-label { min-width:110px; text-align:center; font-weight:700; color:var(--text-main); }
+
+/* 2) Achievement badges */
+.badge {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:2px solid var(--black);
+  background: linear-gradient(180deg,#fff,#f7fafc);
+  font-family: var(--font-heading);
+  font-size:12px;
+  text-transform:uppercase;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.06);
+  margin-right:10px;
+}
+.badge .dot {
+  width:18px; height:18px; border-radius:4px; border:2px solid #000;
+  background: repeating-linear-gradient(45deg, var(--blue-tape) 0 4px, #fff 4px 8px);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.08);
+}
+
+/* Place badges inside .card header area */
+.card-badges { margin-top:8px; display:flex; gap:8px; align-items:center; }
+
+/* 3) Small decorative particle behind card group (subtle) */
+.card-ambient {
+  pointer-events:none;
+  position:absolute;
+  inset: auto -40px -40px auto;
+  width:160px;height:160px;
+  background: radial-gradient(circle at 30% 30%, rgba(29,78,216,0.06), transparent 30%);
+  filter: blur(18px);
+  transform: rotate(-12deg);
+  z-index: -1;
+  border-radius: 24px;
+}
+
+/* 4) Stamp (uses uploaded image path) */
+.stamp {
+  width:120px;
+  border:3px solid #000;
+  border-radius:8px;
+  overflow:hidden;
+  transform:rotate(-6deg);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+  margin:18px auto 0;
+  background:#fff;
+  text-align:center;
+}
+.stamp img{ display:block; width:100%; height: auto; }
+.stamp figcaption{
+  font-size:11px; padding:6px 0; color:var(--text-subtle); font-weight:700;
+}
+
+/* 5) Confetti (small burst, hidden by default) */
+.confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%) scale(0.96);
+  pointer-events: none;
+  width: 220px;
+  height: 120px;
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  opacity: 0;
+}
+.confetti .piece {
+  width:8px; height:12px; border-radius:2px; transform-origin:center; opacity:0.95;
+}
+.confetti.show { animation: confetti-fade 900ms ease forwards; opacity:1; }
+@keyframes confetti-fade {
+  0% { opacity:1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity:0; transform: translate(-50%,-300%) scale(0.9); }
+}
+/* tiny colourful pieces */
+.confetti .piece:nth-child(1){ background:var(--red-tape); transform: rotate(-24deg); }
+.confetti .piece:nth-child(2){ background:var(--blue-tape); transform: rotate(12deg); }
+.confetti .piece:nth-child(3){ background:#F59E0B; transform: rotate(6deg); }
+.confetti .piece:nth-child(4){ background:#10B981; transform: rotate(-8deg); }
+.confetti .piece:nth-child(5){ background:#8B5CF6; transform: rotate(20deg); }
+
+/* 6) CTA pulse (subtle) */
+.cta-pulse {
+  display:inline-block;
+  position:relative;
+}
+.cta-pulse::before {
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border-radius:999px;
+  background: radial-gradient(circle at 30% 30%, rgba(29,78,216,0.06), transparent 40%);
+  z-index: -1;
+  opacity:0;
+  transition: opacity 300ms ease;
+}
+.cta-pulse:hover::before, .cta-pulse:focus::before { opacity:1; }
+
+/* 7) decorative corner pixel sprite for cards (place by adding <span class="pixel-sprite sprite-left"></span>) */
+.sprite-left { position:absolute; top:12px; left:12px; }
+.sprite-right { position:absolute; top:12px; right:12px; transform: rotate(12deg); }
+
+/* 8) tiny readable microcopy style */
+.microcopy { font-size:12px; color:var(--text-subtle); margin-top:6px; }
+
+/* 9) ensure confetti and stamp sit above overlay but below controls */
+.hero { position: relative; }
+.hero .confetti, .hero .stamp { z-index: 2; }
+
+

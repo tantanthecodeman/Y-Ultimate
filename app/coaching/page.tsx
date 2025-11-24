@@ -1,10 +1,7 @@
-// app/coaching/page.tsx
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { TapeBanner, Card, Button, PageHeader, StatBox } from '@/lib/ui/components';
+import { TapeBanner, Card, Button, PageHeader } from '@/lib/ui/components';
 import { UserHeader } from './auth/components/UserHeader';
 import { ChildrenList } from './components/ChildrenList';
 import { SessionsList } from './components/SessionsList';
@@ -14,23 +11,27 @@ import { ReportsDashboard } from './components/ReportsDashboard';
 type TabKey = 'children' | 'sessions' | 'attendance' | 'reports';
 
 export default function CoachingDashboard() {
-  const router = useRouter();
   const [tab, setTab] = useState<TabKey>('children');
 
-  const tabs: { key: TabKey; label: string; icon: string }[] = [
-    { key: 'children', label: 'Students', icon: '👶' },
-    { key: 'sessions', label: 'Sessions', icon: '📅' },
-    { key: 'attendance', label: 'Attendance', icon: '✅' },
-    { key: 'reports', label: 'Reports', icon: '📊' },
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: 'children', label: 'STUDENTS' },
+    { key: 'sessions', label: 'SESSIONS' },
+    { key: 'attendance', label: 'ATTENDANCE' },
+    { key: 'reports', label: 'REPORTS' },
   ];
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', background: '#FFF' }}>
       <UserHeader />
 
       <main style={{ paddingBottom: '64px' }}>
         {/* Header */}
-        <header style={{ borderBottom: '3px solid #000', padding: '24px 0', marginBottom: '48px' }}>
+        <header style={{ 
+          borderBottom: '3px solid #000', 
+          padding: '24px 0', 
+          marginBottom: '48px',
+          background: '#FFF'
+        }}>
           <div className="container">
             <TapeBanner color="red">TRAINING MODE</TapeBanner>
           </div>
@@ -57,21 +58,15 @@ export default function CoachingDashboard() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
+                className={tab === t.key ? 'btn btn-primary' : 'btn btn-secondary'}
                 style={{
-                  padding: '12px 20px',
-                  border: tab === t.key ? '3px solid #000' : '3px solid #E5E7EB',
-                  background: tab === t.key ? '#000' : '#FFF',
-                  color: tab === t.key ? '#FFF' : '#000',
-                  borderRadius: '12px',
-                  fontFamily: 'Bangers, cursive',
-                  fontSize: '14px',
+                  minWidth: 'auto',
+                  padding: '10px 20px',
                   fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}
               >
-                {t.icon} {t.label}
+                {t.label}
               </button>
             ))}
           </div>

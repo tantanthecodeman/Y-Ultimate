@@ -7,25 +7,21 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Y-Ultimate",
-  description: "Tournament and Coaching Management",
+  title: "Y-Ultimate - Tournament & Coaching",
+  description: "Ultimate Frisbee Tournament and Coaching Management Platform",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;800&display=swap" 
+          rel="stylesheet" 
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header className="site-header">
-          <div className="container">
-            <a href="/" className="site-logo">Y‑ULTIMATE</a>
-          </div>
-        </header>
-        <div className="container">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
