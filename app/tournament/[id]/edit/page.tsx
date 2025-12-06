@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { NavigationHeader, TapeBanner, Card, Button } from '@/lib/ui/components';
 import { Tournament } from '../../lib/types';
 
 export default function EditTournamentPage() {
@@ -22,6 +23,7 @@ export default function EditTournamentPage() {
 
   useEffect(() => {
     loadTournament();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tournamentId]);
 
   async function loadTournament() {
@@ -34,7 +36,7 @@ export default function EditTournamentPage() {
         throw new Error(data?.error || 'Failed to load tournament');
       }
 
-      const t = data.tournament;
+      const t = data.tournament as Tournament;
       setTournament(t);
       setName(t.name);
       setLocation(t.location || '');
@@ -62,8 +64,8 @@ export default function EditTournamentPage() {
           name,
           location: location || null,
           start_date: startDate || null,
-          end_date: endDate || null
-        })
+          end_date: endDate || null,
+        }),
       });
 
       const data = await res.json();
@@ -72,8 +74,8 @@ export default function EditTournamentPage() {
         throw new Error(data?.error || 'Failed to update tournament');
       }
 
-      setSuccessMessage('Tournament updated successfully!');
-      setTournament(data.tournament);
+      setSuccessMessage('Tournament updated successfully');
+      setTournament(data.tournament as Tournament);
       
       setTimeout(() => {
         router.push(`/tournament/${tournamentId}`);
@@ -88,268 +90,215 @@ export default function EditTournamentPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24, textAlign: 'center' }}>
-        Loading tournament...
-      </div>
+      <>
+        <NavigationHeader currentPage="tournament" />
+        <div className="loading">LOADING TOURNAMENT...</div>
+      </>
     );
   }
 
   if (error && !tournament) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{
-          padding: 24,
-          backgroundColor: '#fee2e2',
-          border: '1px solid #fecaca',
-          borderRadius: 12,
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#991b1b', fontSize: 16, margin: 0 }}>
-            ❌ {error}
-          </p>
-          <button
-            onClick={() => router.push('/tournament')}
-            style={{
-              marginTop: 16,
-              padding: '8px 16px',
-              backgroundColor: '#3b82f6',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer'
-            }}
-          >
-            Back to Tournaments
-          </button>
+      <>
+        <NavigationHeader currentPage="tournament" />
+        <div className="container" style={{ paddingTop: '48px', maxWidth: '800px' }}>
+          <div className="alert alert-error" style={{ marginBottom: '16px' }}>
+            {error}
+          </div>
+          <Button onClick={() => router.push('/tournament')} variant="primary">
+            BACK TO TOURNAMENTS
+          </Button>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <Link 
+    <main style={{ minHeight: '100vh', paddingBottom: '64px', background: '#FFF' }}>
+      <NavigationHeader currentPage="tournament" />
+
+      <div className="container" style={{ maxWidth: '880px', paddingTop: '32px' }}>
+        {/* Back link */}
+        <Link
           href={`/tournament/${tournamentId}`}
           style={{
-            display: 'inline-block',
-            marginBottom: 16,
-            color: '#3b82f6',
+            display: 'inline-flex',
+            alignItems: 'center',
+            marginBottom: '12px',
+            fontSize: '12px',
+            fontWeight: 700,
+            color: '#6B7280',
             textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
           }}
         >
-          ← Back to Tournament
+          BACK TO TOURNAMENT
         </Link>
-        
-        <h1 style={{ 
-          fontSize: 32, 
-          fontWeight: 700,
-          margin: '0 0 8px 0',
-          color: '#111827'
-        }}>
-          Edit Tournament
-        </h1>
-        <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
-          Update tournament details
-        </p>
-      </div>
 
-      {/* Success Message */}
-      {successMessage && (
-        <div style={{
-          padding: 16,
-          backgroundColor: '#d1fae5',
-          border: '1px solid #6ee7b7',
-          borderRadius: 8,
-          marginBottom: 24,
-          color: '#065f46',
-          fontSize: 14
-        }}>
-          ✅ {successMessage}
-        </div>
-      )}
-
-      {/* Edit Form */}
-      <div style={{
-        padding: 24,
-        backgroundColor: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 12
-      }}>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{
-              display: 'block',
-              marginBottom: 6,
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#374151'
-            }}>
-              Tournament Name *
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Summer Ultimate Championship 2025"
-              required
-              disabled={saving}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: 6,
-                fontSize: 14,
-                backgroundColor: saving ? '#f3f4f6' : '#fff'
-              }}
-            />
+        {/* Tape banner + title block */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '10px' }}>
+            <TapeBanner color="red">TOURNAMENT SETTINGS</TapeBanner>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{
-              display: 'block',
-              marginBottom: 6,
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#374151'
-            }}>
-              Location
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g., Bangalore"
-              disabled={saving}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: 6,
-                fontSize: 14,
-                backgroundColor: saving ? '#f3f4f6' : '#fff'
-              }}
-            />
-          </div>
+          <h1
+            style={{
+              fontFamily: 'Bangers, cursive',
+              fontSize: 'clamp(28px, 5vw, 40px)',
+              lineHeight: 1.05,
+              textTransform: 'uppercase',
+              margin: '0 0 6px 0',
+            }}
+          >
+            EDIT TOURNAMENT
+          </h1>
 
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gap: 16, 
-            marginBottom: 16 
-          }}>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#374151'
-              }}>
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                disabled={saving}
+          {tournament && (
+            <>
+              <div
                 style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  backgroundColor: saving ? '#f3f4f6' : '#fff'
+                  width: '80px',
+                  height: '4px',
+                  borderRadius: '999px',
+                  background:
+                    'linear-gradient(90deg, #E63946, #1D4ED8)',
+                  margin: '8px 0 10px',
                 }}
               />
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#374151'
-              }}>
-                End Date
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                disabled={saving}
+              <div
                 style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  backgroundColor: saving ? '#f3f4f6' : '#fff'
-                }}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div style={{
-              padding: 12,
-              backgroundColor: '#fee2e2',
-              border: '1px solid #fecaca',
-              borderRadius: 6,
-              marginBottom: 16,
-              fontSize: 14,
-              color: '#991b1b'
-            }}>
-              ❌ {error}
-            </div>
-          )}
-
-          <div style={{ 
-            display: 'flex', 
-            gap: 12,
-            justifyContent: 'flex-end'
-          }}>
-            <Link href={`/tournament/${tournamentId}`}>
-              <button
-                type="button"
-                disabled={saving}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  fontWeight: 600
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '14px',
+                  fontSize: '13px',
+                  color: '#6B7280',
+                  alignItems: 'center',
+                  marginBottom: '4px',
                 }}
               >
-                Cancel
-              </button>
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
+                <span>
+                  Editing:{' '}
+                  <span style={{ fontWeight: 600, color: '#0F1724' }}>
+                    {tournament.name}
+                  </span>
+                </span>
+                {tournament.location && (
+                  <span>
+                    Location: <span>{tournament.location}</span>
+                  </span>
+                )}
+                {(tournament.start_date || tournament.end_date) && (
+                  <span>
+                    Dates:{' '}
+                    <span>
+                      {tournament.start_date || '—'}{' '}
+                      {tournament.end_date ? `– ${tournament.end_date}` : ''}
+                    </span>
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+
+          
+        </div>
+
+        {/* Alerts */}
+        {successMessage && (
+          <div className="alert alert-success" style={{ marginBottom: '16px' }}>
+            {successMessage}
+          </div>
+        )}
+
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: '16px' }}>
+            {error}
+          </div>
+        )}
+
+        {/* Form card */}
+        <Card white rotation={false}>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label>Tournament Name *</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Summer Ultimate Championship 2025"
+                required
+                disabled={saving}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label>Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., Bangalore"
+                disabled={saving}
+              />
+            </div>
+
+            <div
               style={{
-                padding: '10px 20px',
-                backgroundColor: saving ? '#9ca3af' : '#3b82f6',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontSize: 14,
-                fontWeight: 600
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+                marginBottom: '16px',
               }}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
+              <div>
+                <label>Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+
+              <div>
+                <label>End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <Link href={`/tournament/${tournamentId}`}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={saving}
+                >
+                  CANCEL
+                </Button>
+              </Link>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={saving}
+              >
+                {saving ? 'SAVING...' : 'SAVE CHANGES'}
+              </Button>
+            </div>
+          </form>
+        </Card>
       </div>
-    </div>
+    </main>
   );
 }

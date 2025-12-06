@@ -44,36 +44,81 @@ export default function MatchScoreUpdateForm({
 
       if (onSuccess) onSuccess();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "An unexpected error occurred";
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
       setError(message);
     } finally {
       setLoading(false);
     }
   }
 
+  const homeName = match.home_team?.name || "Home Team";
+  const awayName = match.away_team?.name || "Away Team";
+
   return (
     <form
       onSubmit={handleSubmit}
+      className="card white"
       style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
+        borderRadius: 20,
         padding: 24,
-        backgroundColor: "#fff",
+        boxShadow: "0 10px 18px rgba(15,23,42,0.10)",
       }}
     >
-      <h3 style={{ margin: "0 0 16px 0", fontSize: 18, fontWeight: 700 }}>
-        Update Match Score
-      </h3>
+      {/* Heading */}
+      <div className="mb-2">
+        <div
+          style={{
+            display: "inline-block",
+            marginBottom: 8,
+          }}
+        >
+          <span
+            className="tape-banner"
+            style={{
+              display: "inline-block",
+              fontSize: 14,
+              padding: "6px 14px",
+              textTransform: "uppercase",
+            }}
+          >
+            Update match score
+          </span>
+        </div>
 
+        <h3
+          style={{
+            margin: "0 0 4px 0",
+            fontFamily: '"Bangers", cursive',
+            fontSize: 24,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
+        >
+          {homeName} vs {awayName}
+        </h3>
+        <p
+          style={{
+            margin: 0,
+            color: "#6B7280",
+            fontSize: 14,
+          }}
+        >
+          Enter scores and update match status.
+        </p>
+      </div>
+
+      {/* Error */}
       {error && (
-        <div style={{ padding: 12, backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: 6, marginBottom: 16, color: "#991b1b" }}>
+        <div className="alert alert-error" style={{ marginBottom: 16 }}>
           {error}
         </div>
       )}
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
-          {match.home_team?.name || "Home Team"} Score
+      {/* Home score */}
+      <div className="mb-3">
+        <label>
+          {homeName} Score
         </label>
         <input
           type="number"
@@ -82,13 +127,13 @@ export default function MatchScoreUpdateForm({
           min={0}
           required
           disabled={loading}
-          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
         />
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>
-          {match.away_team?.name || "Away Team"} Score
+      {/* Away score */}
+      <div className="mb-3">
+        <label>
+          {awayName} Score
         </label>
         <input
           type="number"
@@ -97,17 +142,16 @@ export default function MatchScoreUpdateForm({
           min={0}
           required
           disabled={loading}
-          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
         />
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", marginBottom: 6, fontWeight: 600 }}>Status</label>
+      {/* Status */}
+      <div className="mb-3">
+        <label>Status</label>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           disabled={loading}
-          style={{ width: "100%", padding: 10, border: "1px solid #d1d5db", borderRadius: 6 }}
         >
           <option value="scheduled">Scheduled</option>
           <option value="live">Live</option>
@@ -115,37 +159,36 @@ export default function MatchScoreUpdateForm({
         </select>
       </div>
 
-      <div style={{ display: "flex", gap: 12 }}>
+      {/* Actions */}
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          marginTop: 8,
+        }}
+      >
         <button
           type="submit"
           disabled={loading}
+          className="btn btn-primary"
           style={{
             flex: 1,
-            padding: 10,
-            backgroundColor: loading ? "#9ca3af" : "#10b981",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
+            opacity: loading ? 0.7 : 1,
             cursor: loading ? "not-allowed" : "pointer",
-            fontWeight: 600,
           }}
         >
           {loading ? "Updating..." : "Update Score"}
         </button>
+
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
             disabled={loading}
+            className="btn btn-secondary"
             style={{
               flex: 1,
-              padding: 10,
-              backgroundColor: "#f3f4f6",
-              color: "#374151",
-              border: "1px solid #d1d5db",
-              borderRadius: 6,
-              cursor: "pointer",
-              fontWeight: 600,
+              opacity: loading ? 0.9 : 1,
             }}
           >
             Cancel

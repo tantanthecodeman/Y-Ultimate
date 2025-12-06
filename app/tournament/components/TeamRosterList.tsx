@@ -92,7 +92,7 @@ export default function TeamRosterList({
       }}>
         <h3 style={{ 
           margin: 0,
-          fontSize: 18,
+          fontSize: 24,
           fontWeight: 700,
           color: '#111827'
         }}>

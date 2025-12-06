@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { NavigationHeader, TapeBanner, Card, Button } from '@/lib/ui/components';
 
 type Team = { id: string; name: string };
 
@@ -151,13 +154,14 @@ export default function NewPlayerPage() {
               <option value="player">Player</option>
               <option value="coach">Coach</option>
               <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
             </select>
           </Field>
         </div>
 
         <Field label="Team">
           {loadingTeams ? (
-            <div style={{ padding: 10, color: '#6b7280' }}>Loading teams…</div>
+            <div style={{ padding: 10, color: '#6b7280' }}>Loading teams...</div>
           ) : (
             <select
               value={teamId}

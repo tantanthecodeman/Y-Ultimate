@@ -8,10 +8,10 @@ interface TeamRegistrationFormProps {
   onCancel?: () => void;
 }
 
-export default function TeamRegistrationForm({ 
-  tournamentId, 
+export default function TeamRegistrationForm({
+  tournamentId,
   onSuccess,
-  onCancel 
+  onCancel,
 }: TeamRegistrationFormProps) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,10 +26,10 @@ export default function TeamRegistrationForm({
       const res = await fetch('/api/tournament/team/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          tournament_id: tournamentId, 
-          name 
-        })
+        body: JSON.stringify({
+          tournament_id: tournamentId,
+          name,
+        }),
       });
 
       const data = await res.json();
@@ -49,31 +49,48 @@ export default function TeamRegistrationForm({
   }
 
   return (
-    <div style={{
-      border: '1px solid #e5e7eb',
-      borderRadius: 12,
-      padding: 24,
-      backgroundColor: '#fff'
-    }}>
-      <h3 style={{ 
-        margin: '0 0 16px 0',
-        fontSize: 18,
-        fontWeight: 700,
-        color: '#111827'
-      }}>
-        Register New Team
-      </h3>
+    <div className="card white" style={{ borderRadius: 20, padding: 24, border: '3px solid #000' }}>
+      {/* Heading */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: 'inline-block', marginBottom: 8 }}>
+          <span
+            className="tape-banner"
+            style={{ display: 'inline-block', fontSize: 16, padding: '6px 14px', textTransform: 'uppercase' }}
+          >
+            Register new team
+          </span>
+        </div>
+
+        <h3
+          style={{
+            margin: 5,
+            fontFamily: '"Bangers", cursive',
+            fontSize: 24,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+          }}
+        >
+          Team details
+        </h3>
+
+        <p style={{ margin: 0, color: '#6B7280', fontSize: 14}}>
+          Add a team to this tournament.
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'block',
-            marginBottom: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            Team Name *
+          <label
+            style={{
+              display: 'block',
+              marginBottom: 6,
+              fontSize: 20,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
+            Team name 
           </label>
           <input
             type="text"
@@ -85,67 +102,49 @@ export default function TeamRegistrationForm({
             style={{
               width: '100%',
               padding: '10px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: 6,
-              fontSize: 14,
-              backgroundColor: loading ? '#f9fafb' : '#fff'
+              border: '3px solid #000',
+              borderRadius: 12,
+              fontSize: 16,
+              backgroundColor: loading ? '#f9fafb' : '#fff',
+              boxShadow: '0 6px 0 rgba(0,0,0,0.06)',
             }}
           />
         </div>
 
         {error && (
-          <div style={{
-            padding: 12,
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fecaca',
-            borderRadius: 6,
-            marginBottom: 16,
-            fontSize: 14,
-            color: '#991b1b'
-          }}>
-            ❌ {error}
+          <div
+            className="alert alert-error"
+            style={{ marginBottom: 16 }}
+          >
+            {error}
           </div>
         )}
 
-        <div style={{ 
-          display: 'flex', 
-          gap: 12,
-          justifyContent: 'flex-end'
-        }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
               disabled={loading}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: 'none',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}
+              className="btn btn-secondary"
+              style={{ padding: '10px 20px', borderRadius: 12 }}
             >
               Cancel
             </button>
           )}
+
           <button
             type="submit"
             disabled={loading}
+            className="btn btn-primary"
             style={{
               padding: '10px 20px',
-              backgroundColor: loading ? '#9ca3af' : '#3b82f6',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
+              borderRadius: 12,
+              opacity: loading ? 0.8 : 1,
               cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: 14,
-              fontWeight: 600
             }}
           >
-            {loading ? 'Creating...' : 'Create Team'}
+            {loading ? 'Creating...' : 'Create team'}
           </button>
         </div>
       </form>

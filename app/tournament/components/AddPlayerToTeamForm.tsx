@@ -10,10 +10,10 @@ interface AddPlayerToTeamFormProps {
   onCancel?: () => void;
 }
 
-export default function AddPlayerToTeamForm({ 
-  teamId, 
+export default function AddPlayerToTeamForm({
+  teamId,
   onSuccess,
-  onCancel 
+  onCancel,
 }: AddPlayerToTeamFormProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string>('');
@@ -26,20 +26,24 @@ export default function AddPlayerToTeamForm({
 
   useEffect(() => {
     loadProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   async function loadProfiles() {
     try {
       setLoading(true);
-      const url = `/api/profile/list?role=player${search ? `&search=${search}` : ''}`;
+      const url = `/api/profile/list?role=player${search ? `&search=${encodeURIComponent(search)}` : ''}`;
       const res = await fetch(url);
       const data = await res.json();
-      
+
       if (res.ok) {
         setProfiles(data.profiles || []);
+      } else {
+        setProfiles([]);
       }
     } catch (err: unknown) {
-      console.error('Failed to load profiles');
+      console.error('Failed to load profiles', err);
+      setProfiles([]);
     } finally {
       setLoading(false);
     }
@@ -64,8 +68,8 @@ export default function AddPlayerToTeamForm({
           team_id: teamId,
           profile_id: selectedProfile,
           jersey_number: jerseyNumber || null,
-          is_captain: isCaptain
-        })
+          is_captain: isCaptain,
+        }),
       });
 
       const data = await res.json();
@@ -84,84 +88,48 @@ export default function AddPlayerToTeamForm({
   }
 
   return (
-    <div style={{
-      border: '1px solid #e5e7eb',
-      borderRadius: 12,
-      padding: 24,
-      backgroundColor: '#fff'
-    }}>
-      <h3 style={{ 
-        margin: '0 0 16px 0',
-        fontSize: 18,
-        fontWeight: 700,
-        color: '#111827'
-      }}>
-        Add Player to Team
-      </h3>
+    <div className="add-player-card card-jiggle">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
+        <div>
+          <div className="tape-banner">Add player</div>
+          <h3 style={{ margin: '16px 0 6px 0', fontSize: 20, fontWeight: 700, fontFamily: '"Bangers", cursive' }}>
+            Add Player to Team
+          </h3>
+          <div style={{ fontSize: 14, color: '#6b7280' }}>Pick a player from existing profiles or search to invite new players.</div>
+        </div>
+
+        <div style={{ minWidth: 120, textAlign: 'right' }}>
+          
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit}>
         {/* Search */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'block',
-            marginBottom: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            Search Players
+          <label style={{ display: 'block', marginBottom: 8, fontSize: 16, fontWeight: 700, color: '#374151' }}>
+            Search players
           </label>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name..."
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: 6,
-              fontSize: 14
-            }}
+            placeholder="Filter by name..."
+            className="search-input"
           />
         </div>
 
         {/* Player List */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'block',
-            marginBottom: 8,
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            Select Player *
+          <label style={{ display: 'block', marginBottom: 8, fontSize: 16, fontWeight: 700, color: '#374151' }}>
+            Select player 
           </label>
-          
+
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 20, color: '#6b7280' }}>
-              Loading players...
-            </div>
+            <div className="empty">Loading players...</div>
           ) : profiles.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: 20,
-              border: '2px dashed #d1d5db',
-              borderRadius: 8,
-              color: '#9ca3af'
-            }}>
-              {search ? 'No players found' : 'No players available'}
-            </div>
+            <div className="empty">{search ? 'No players found' : 'No players available'}</div>
           ) : (
-            <div style={{
-              maxHeight: 300,
-              overflowY: 'auto',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: 8,
-              display: 'grid',
-              gap: 8
-            }}>
+            <div className="profiles-list">
               {profiles.map((profile) => (
                 <PlayerProfileCard
                   key={profile.id}
@@ -176,14 +144,8 @@ export default function AddPlayerToTeamForm({
 
         {/* Jersey Number */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'block',
-            marginBottom: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            Jersey Number (Optional)
+          <label style={{ display: 'block', marginBottom: 6, fontSize: 16, fontWeight: 700, color: '#374151' }}>
+            Jersey number (optional)
           </label>
           <input
             type="text"
@@ -191,76 +153,49 @@ export default function AddPlayerToTeamForm({
             onChange={(e) => setJerseyNumber(e.target.value)}
             placeholder="e.g., 7"
             disabled={submitting}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: 6,
-              fontSize: 14,
-              backgroundColor: submitting ? '#f9fafb' : '#fff'
-            }}
+            className="field-input"
           />
         </div>
 
-        {/* Captain Checkbox */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={isCaptain}
-              onChange={(e) => setIsCaptain(e.target.checked)}
-              disabled={submitting}
-              style={{ width: 16, height: 16, cursor: 'pointer' }}
-            />
-            <span style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#374151'
-            }}>
-              Make this player team captain
-            </span>
-          </label>
-        </div>
+        {/* Captain Toggle */}
+<div className="form-section" style={{ marginBottom: 18 }}>
+  <label
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14,     // tightened gap
+      cursor: 'pointer',
+      fontWeight: 700,
+      fontSize: 16,
+      color: '#111827',
+    }}
+  >
+    <span style={{ flexShrink: 0 }}>Make this player the captain</span>
 
-        {error && (
-          <div style={{
-            padding: 12,
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fecaca',
-            borderRadius: 6,
-            marginBottom: 16,
-            fontSize: 14,
-            color: '#991b1b'
-          }}>
-            ❌ {error}
-          </div>
-        )}
+    <button
+      type="button"
+      aria-pressed={isCaptain}
+      onClick={() => setIsCaptain((s) => !s)}
+      className={`toggle-big ${isCaptain ? 'on' : 'off'}`}
+      style={{ flexShrink: 0 }}
+    >
+      <div className="toggle-track">
+        <div className="toggle-thumb" />
+      </div>
+    </button>
+  </label>
+</div>
 
-        <div style={{ 
-          display: 'flex', 
-          gap: 12,
-          justifyContent: 'flex-end'
-        }}>
+
+        {error && <div className="error-box">❌ {error}</div>}
+
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
               disabled={submitting}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: 'none',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}
+              className="btn btn-secondary"
             >
               Cancel
             </button>
@@ -268,21 +203,78 @@ export default function AddPlayerToTeamForm({
           <button
             type="submit"
             disabled={submitting || !selectedProfile}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: submitting || !selectedProfile ? '#9ca3af' : '#10b981',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: submitting || !selectedProfile ? 'not-allowed' : 'pointer',
-              fontSize: 14,
-              fontWeight: 600
-            }}
+            className="btn btn-primary"
+            style={{ opacity: submitting || !selectedProfile ? 0.85 : 1 }}
           >
-            {submitting ? 'Adding...' : 'Add Player'}
+            {submitting ? 'Adding...' : 'Add player'}
           </button>
         </div>
       </form>
+
+      <style jsx>{`
+  /* BIG, CLEAR, BLUE toggle switch */
+  .toggle-big {
+    width: 70px;
+    height: 40px;
+    border-radius: 999px;
+    border: 3px solid #000;
+    padding: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 180ms ease, box-shadow 180ms ease;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+  }
+
+  .toggle-big.on {
+    background: #1d4ed8;
+  }
+
+  .toggle-track {
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    position: relative;
+  }
+
+  .toggle-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #000;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: left 200ms cubic-bezier(0.3, 0.7, 0.4, 1.4), transform 200ms;
+  }
+
+  .toggle-big.on .toggle-thumb {
+    left: calc(100% - 35px);
+    transform: rotate(-4deg);
+  }
+
+  /* Hover jiggle */
+  .toggle-big:hover .toggle-thumb {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+
+  /* Section spacing fix */
+  .add-player-card {
+    border-radius: 14px;
+    border: 3px solid #000;
+    padding: 22px;
+    background: #fff;
+    margin-bottom: 20px;
+  }
+
+  .form-section {
+    margin-bottom: 18px;
+  }
+`}</style>
+
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/lib/supabaseClient';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TapeBanner, Card, PageHeader } from '@/lib/ui/components';
+import { NavigationHeader, TapeBanner, Card } from '@/lib/ui/components';
 
 export default function CoachingLoginPage() {
   const router = useRouter();
@@ -39,28 +39,39 @@ export default function CoachingLoginPage() {
 
   if (loading) {
     return (
-      <div className="loading" style={{ minHeight: '100vh' }}>
-        LOADING...
-      </div>
+      <>
+        <NavigationHeader currentPage="coaching" />
+        <div className="loading">LOADING...</div>
+      </>
     );
   }
 
   return (
-    <main style={{ minHeight: '100vh', paddingBottom: '64px' }}>
-      {/* Header */}
-      <header style={{ borderBottom: '3px solid #000', padding: '24px 0', marginBottom: '48px' }}>
-        <div className="container">
-          <TapeBanner color="red">TRAINING MODE</TapeBanner>
+    <main style={{ minHeight: '100vh', paddingBottom: '64px', background: '#FFF' }}>
+      <NavigationHeader currentPage="coaching" />
+
+      <div className="container" style={{ maxWidth: '500px', paddingTop: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <TapeBanner color="red" className="mb-3">TRAINING MODE</TapeBanner>
+          
+          <h1 style={{
+            fontFamily: 'Bangers, cursive',
+            fontSize: 'clamp(28px, 6vw, 48px)',
+            margin: '16px 0 8px 0',
+            textTransform: 'uppercase'
+          }}>
+            COACHING PORTAL
+          </h1>
+          
+          <p style={{
+            color: '#6B7280',
+            fontSize: '15px'
+          }}>
+            Sign in to manage your training sessions
+          </p>
         </div>
-      </header>
 
-      <div className="container" style={{ maxWidth: '500px' }}>
-        <PageHeader
-          title="Coaching Portal"
-          subtitle="Sign in to manage your training sessions"
-        />
-
-        <Card white={true} className="text-center">
+        <Card white={true} rotation={false}>
           <style>{`
             .supabase-auth-ui_ui-button {
               background: #000 !important;
@@ -73,10 +84,12 @@ export default function CoachingLoginPage() {
               text-transform: uppercase !important;
               cursor: pointer !important;
               transition: all 0.2s ease !important;
+              box-shadow: 0 6px 0 rgba(0,0,0,0.40) !important;
             }
             
             .supabase-auth-ui_ui-button:hover {
               transform: translateY(2px) !important;
+              box-shadow: 0 4px 0 rgba(0,0,0,0.55) !important;
             }
             
             .supabase-auth-ui_ui-input {
@@ -88,10 +101,11 @@ export default function CoachingLoginPage() {
             
             .supabase-auth-ui_ui-label {
               font-family: 'Bangers', cursive !important;
-              font-size: 14px !important;
+              font-size: 13px !important;
               font-weight: 700 !important;
               text-transform: uppercase !important;
               text-align: left !important;
+              letter-spacing: 0.5px !important;
             }
             
             .supabase-auth-ui_ui-anchor {
