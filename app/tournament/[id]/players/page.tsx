@@ -12,14 +12,17 @@ function Field({
 }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 18, color: '#374151', marginBottom: 10 }}>{label}</label>
       {children}
-      {hint && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>{hint}</div>}
     </div>
   );
 }
 
 export default function NewPlayerPage() {
+  const params = useParams();
+  const tournamentId = params.id as string;
+  
   const [teams, setTeams] = useState<Team[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(true);
 
@@ -39,11 +42,11 @@ export default function NewPlayerPage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load teams for dropdown (anonymous)
+    // Load teams for dropdown
     async function loadTeams() {
       try {
         setLoadingTeams(true);
-        const res = await fetch('/api/tournament/teams'); // Adjust if you need tournament filter
+        const res = await fetch(`/api/tournament/teams?tournament_id=${tournamentId}`);
         const json = await res.json();
         setTeams(json.teams || []);
       } catch {
@@ -53,7 +56,7 @@ export default function NewPlayerPage() {
       }
     }
     loadTeams();
-  }, []);
+  }, [tournamentId]);
 
   const jerseyNum = useMemo(() => {
     const n = Number(jersey);
@@ -71,11 +74,13 @@ export default function NewPlayerPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/profiles/create', {
+      // FIXED: Changed from /api/profiles/create to /api/profile/create
+      // FIXED: Changed fullname to full_name to match API expectation
+      const res = await fetch('/api/profile/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullname,
+          full_name: fullname, // CHANGED: was 'fullname'
           role,
           team_id: teamId || null,
           jersey_number: jerseyNum,
@@ -98,7 +103,7 @@ export default function NewPlayerPage() {
 
       if (!res.ok) throw new Error(json.error || 'Failed to create player');
 
-      setMsg(`✅ Player created: ${json.profile.fullname}`);
+      setMsg(`✅ Player created: ${json.profile.full_name}`);
       // Reset form
       setFullname('');
       setRole('player');
@@ -118,163 +123,254 @@ export default function NewPlayerPage() {
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: '24px auto', padding: 16 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12 }}>Create Player (No Login)</h1>
-      <p style={{ color: '#6b7280', marginBottom: 20 }}>
-        Create a player profile with optional details. No sign-in required.
-      </p>
+    <main style={{ minHeight: '100vh', paddingBottom: '64px', background: '#FFF' }}>
+      <NavigationHeader currentPage="tournament" />
 
-      {/* Form container */}
-      <form onSubmit={handleSubmit} style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 16,
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 12,
-        padding: 16
-      }}>
-        <div style={{ gridColumn: '1 / -1', display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
-          <Field label="Full name">
-            <input
-              value={fullname}
-              onChange={(e) => setFullname(e.target.value)}
-              placeholder="Jane Doe"
-              required
-              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-            />
-          </Field>
+      <div className="container" style={{ maxWidth: '880px', paddingTop: '20px' }}>
+        {/* Back link */}
+        <Link
+          href={`/tournament/${tournamentId}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            marginBottom: '18px',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#6B7280',
+            textDecoration: 'none',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+          }}
+        >
+          ← BACK TO TOURNAMENT
+        </Link>
 
-          <Field label="Role">
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-            >
-              <option value="player">Player</option>
-              <option value="coach">Coach</option>
-              <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
-            </select>
-          </Field>
-        </div>
+        {/* Header */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <TapeBanner color="blue">PLAYER REGISTRATION</TapeBanner>
+          </div>
 
-        <Field label="Team">
-          {loadingTeams ? (
-            <div style={{ padding: 10, color: '#6b7280' }}>Loading teams...</div>
-          ) : (
-            <select
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-            >
-              <option value="">No team</option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          )}
-        </Field>
-
-        <Field label="Jersey number" hint="Optional, numeric">
-          <input
-            value={jersey}
-            onChange={(e) => setJersey(e.target.value)}
-            inputMode="numeric"
-            placeholder="10"
-            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-          />
-        </Field>
-
-        <Field label="Preferred position">
-          <input
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
-            placeholder="Cutter, Handler, etc."
-            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-          />
-        </Field>
-
-        <Field label="Date of birth">
-          <input
-            type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-          />
-        </Field>
-
-        <Field label="Contact email">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="player@example.com"
-            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-          />
-        </Field>
-
-        <Field label="Contact phone">
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+91 98765 43210"
-            style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-          />
-        </Field>
-
-        <div style={{ gridColumn: '1 / -1' }}>
-          <Field label="Notes">
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              placeholder="Medical, availability, preferences…"
-              style={{ width: '100%', padding: 10, border: '1px solid #d1d5db', borderRadius: 6 }}
-            />
-          </Field>
-        </div>
-
-        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-          <span style={{ fontSize: 13, color: '#374151' }}>
-            I confirm the information is correct and I have consent to submit it.
-          </span>
-        </div>
-
-        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <button
-            type="button"
-            onClick={() => {
-              setFullname(''); setRole('player'); setTeamId(''); setJersey(''); setPosition('');
-              setDob(''); setEmail(''); setPhone(''); setNotes(''); setAgree(false); setMsg(null);
+          <h1
+            style={{
+              fontFamily: 'Bangers, cursive',
+              fontSize: 'clamp(32px, 10vw, 40px)',
+              lineHeight: 1.05,
+              textTransform: 'uppercase',
+              margin: '0 0 6px 0',
             }}
-            style={{ padding: '10px 16px', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 6, cursor: 'pointer' }}
           >
-            Clear
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{ padding: '10px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
-          >
-            {submitting ? 'Creating…' : 'Create Player'}
-          </button>
-        </div>
-      </form>
+            CREATE NEW PLAYER
+          </h1>
 
-      {msg && (
-        <div style={{
-          marginTop: 12,
-          padding: 12,
-          backgroundColor: msg.startsWith('✅') ? '#ecfdf5' : '#fef2f2',
-          border: `1px solid ${msg.startsWith('✅') ? '#a7f3d0' : '#fecaca'}`,
-          borderRadius: 8,
-          color: msg.startsWith('✅') ? '#065f46' : '#991b1b'
-        }}>
-          {msg}
+          <div
+            style={{
+              width: '80px',
+              height: '4px',
+              borderRadius: '999px',
+              background: 'linear-gradient(90deg, #E63946, #1D4ED8)',
+              margin: '8px 0 10px',
+            }}
+          />
+          
+          
         </div>
-      )}
-    </div>
+
+        {/* Form Card */}
+        <Card white rotation={false}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <Field label="Full name">
+                <input
+                  value={fullname}
+                  onChange={(e) => setFullname(e.target.value)}
+                  placeholder="Jane Doe"
+                  required
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+
+              <Field label="Role">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                >
+                  <option value="player">Player</option>
+                  <option value="coach">Coach</option>
+                  <option value="td">Tournament Director</option>
+                  <option value="volunteer">Volunteer</option>
+                </select>
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <Field label="Team">
+                {loadingTeams ? (
+                  <div style={{ padding: 10, color: '#6b7280' }}>Loading teams...</div>
+                ) : (
+                  <select
+                    value={teamId}
+                    onChange={(e) => setTeamId(e.target.value)}
+                    disabled={submitting}
+                    style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                  >
+                    <option value="">No team</option>
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+
+              <Field label="Jersey number" hint="Optional, numeric">
+                <input
+                  value={jersey}
+                  onChange={(e) => setJersey(e.target.value)}
+                  inputMode="numeric"
+                  placeholder="10"
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <Field label="Preferred position">
+                <input
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  placeholder="Cutter, Handler, etc."
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+
+              <Field label="Date of birth">
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <Field label="Contact email">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="player@example.com"
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+
+              <Field label="Contact phone">
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Field label="Notes">
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                  placeholder="Medical conditions, availability, preferences…"
+                  disabled={submitting}
+                  style={{ width: '100%', padding: 10, border: '3px solid #000', borderRadius: 12 }}
+                />
+              </Field>
+            </div>
+
+            {/* Consent Section - Improved visibility */}
+            <div style={{
+              padding: '16px',
+              background: '#F9FAFB',
+              border: '3px solid #000',
+              borderRadius: '12px',
+              marginBottom: '20px'
+            }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                lineHeight: '1.6'
+              }}>
+                <input 
+                  type="checkbox" 
+                  checked={agree} 
+                  onChange={(e) => setAgree(e.target.checked)}
+                  disabled={submitting}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    marginTop: '2px',
+                    cursor: 'pointer',
+                    accentColor: '#1D4ED8'
+                  }}
+                />
+                <span style={{ 
+                  color: '#111827',
+                  fontWeight: 500
+                }}>
+                  I confirm that the information provided is accurate and I have obtained 
+                  the necessary consent to submit this player registration.
+                </span>
+              </label>
+            </div>
+
+            {msg && (
+              <div style={{
+                marginBottom: 16,
+                padding: 12,
+                backgroundColor: msg.startsWith('✅') ? '#ecfdf5' : '#fef2f2',
+                border: `3px solid ${msg.startsWith('✅') ? '#a7f3d0' : '#fecaca'}`,
+                borderRadius: 12,
+                color: msg.startsWith('✅') ? '#065f46' : '#991b1b'
+              }}>
+                {msg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setFullname(''); setRole('player'); setTeamId(''); setJersey(''); 
+                  setPosition(''); setDob(''); setEmail(''); setPhone(''); 
+                  setNotes(''); setAgree(false); setMsg(null);
+                }}
+                disabled={submitting}
+              >
+                CLEAR
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={submitting || !agree}
+              >
+                {submitting ? 'CREATING...' : 'CREATE PLAYER'}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </main>
   );
 }

@@ -11,6 +11,7 @@ export interface Tournament {
 }
 
 export interface Team {
+  [x: string]: any;
   id: string;
   tournament_id: string;
   name: string;

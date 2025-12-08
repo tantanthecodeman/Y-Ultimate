@@ -20,8 +20,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    // 3) Extract fields
+    // 3) Extract fields - FIXED: Accept both full_name and fullname
     const {
+      full_name,
       fullname,
       role = 'player',
       team_id = null,
@@ -33,15 +34,18 @@ export async function POST(req: Request) {
       notes = null,
     } = body as Record<string, unknown>;
 
-    if (typeof fullname !== 'string' || !fullname.trim()) {
-      return NextResponse.json({ error: 'fullname is required' }, { status: 400 });
+    // Use full_name if provided, otherwise fallback to fullname
+    const playerName = full_name || fullname;
+
+    if (typeof playerName !== 'string' || !playerName.trim()) {
+      return NextResponse.json({ error: 'full_name is required' }, { status: 400 });
     }
 
-    // 4) Insert
+    // 4) Insert - use full_name as the column name
     const { data, error } = await supabase
       .from('profiles')
       .insert([{
-        fullname,
+        full_name: playerName,
         role,
         team_id,
         jersey_number,
